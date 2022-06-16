@@ -8,7 +8,7 @@
         deleteUrl: url
     });
     $("#gridContainer").dxDataGrid({
-        dataSource: { 
+        dataSource: {
             store: db
         },
         height: "100%",
@@ -62,21 +62,21 @@
             {
                 column: "ID",
                 summaryType: "avg"
-            }, 
+            },
             {
-                column: "ID", 
+                column: "ID",
                 summaryType: "min"
             }, {
-                column: "ID", 
+                column: "ID",
                 summaryType: "max"
             }],
             groupItems: [{
                 summaryType: "count"
             },{
-                column: "ID", 
+                column: "ID",
                 summaryType: "min"
             }, {
-                column: "ID", 
+                column: "ID",
                 summaryType: "max"}]
             },
             remoteOperations: {
@@ -85,7 +85,7 @@
                 groupPaging: true,
                 paging: true,
                 sorting: true,
-                summary: true  
+                summary: true
             },
             headerFilter: {
                 visible: true
