@@ -12,7 +12,7 @@ class AggregateHelper
     const AS_OP = 'AS';
     const GENERATED_FIELD_PREFIX = 'dx_';
 
-    private static function _RecalculateGroupCountAndSummary(&$dataItem, $groupInfo)
+    private static function _recalculateGroupCountAndSummary(&$dataItem, $groupInfo)
     {
         if ($groupInfo['groupIndex'] <= $groupInfo['groupCount'] - 3) {
             $items = $dataItem['items'];
@@ -20,7 +20,7 @@ class AggregateHelper
             foreach ($items as $item) {
                 $grInfo = $groupInfo;
                 $grInfo['groupIndex']++;
-                self::_RecalculateGroupCountAndSummary($item, $grInfo);
+                self::_recalculateGroupCountAndSummary($item, $grInfo);
             }
         }
 
@@ -71,7 +71,7 @@ class AggregateHelper
         }
     }
 
-    private static function _GetNewDataItem($row, $groupInfo)
+    private static function _getNewDataItem($row, $groupInfo)
     {
         $dataItem = [];
         $dataFieldCount = count($groupInfo['dataFieldNames']);
@@ -83,7 +83,7 @@ class AggregateHelper
         return $dataItem;
     }
 
-    private static function _GetNewGroupItem($row, $groupInfo)
+    private static function _getNewGroupItem($row, $groupInfo)
     {
         $groupIndexOffset = $groupInfo['lastGroupExpanded'] ? 1 : 2;
         $groupItem = [];
@@ -106,14 +106,14 @@ class AggregateHelper
             if (!$groupInfo['lastGroupExpanded']) {
                 $groupItem['count'] = $row[$groupInfo['groupIndex'] + 1];
             } else {
-                $groupItem['items'][] = self::_GetNewDataItem($row, $groupInfo);
+                $groupItem['items'][] = self::_getNewDataItem($row, $groupInfo);
             }
         }
 
         return $groupItem;
     }
 
-    private static function _GroupData($row, &$resultItems, $groupInfo)
+    private static function _groupData($row, &$resultItems, $groupInfo)
     {
         $itemsCount = count($resultItems);
 
@@ -130,7 +130,7 @@ class AggregateHelper
             if (!$groupInfo['lastGroupExpanded']) {
                 if (!isset($row) || $currentItem['key'] != $row[$groupInfo['groupIndex']]) {
                     if ($groupInfo['groupIndex'] == 0 && $groupInfo['groupCount'] > 2) {
-                        self::_RecalculateGroupCountAndSummary($currentItem, $groupInfo);
+                        self::_recalculateGroupCountAndSummary($currentItem, $groupInfo);
                     }
 
                     unset($currentItem);
@@ -144,24 +144,24 @@ class AggregateHelper
                     unset($currentItem);
                 } else {
                     if ($groupInfo['groupIndex'] == $groupInfo['groupCount'] - $groupIndexOffset) {
-                        $currentItem['items'][] = self::_GetNewDataItem($row, $groupInfo);
+                        $currentItem['items'][] = self::_getNewDataItem($row, $groupInfo);
                     }
                 }
             }
         }
 
         if (!isset($currentItem)) {
-            $currentItem = self::_GetNewGroupItem($row, $groupInfo);
+            $currentItem = self::_getNewGroupItem($row, $groupInfo);
             $resultItems[] = &$currentItem;
         }
 
         if ($groupInfo['groupIndex'] < $groupInfo['groupCount'] - $groupIndexOffset) {
             $groupInfo['groupIndex']++;
-            self::_GroupData($row, $currentItem['items'], $groupInfo);
+            self::_groupData($row, $currentItem['items'], $groupInfo);
         }
     }
 
-    public static function GetGroupedDataFromQuery($queryResult, $groupSettings)
+    public static function getGroupedDataFromQuery($queryResult, $groupSettings)
     {
         $result = [];
         $groupSummaryTypes = null;
@@ -194,15 +194,15 @@ class AggregateHelper
         while ($row = $queryResult->fetch_array(MYSQLI_NUM)) {
             if (isset($startSummaryFieldIndex)) {
                 for ($i = $startSummaryFieldIndex; $i <= $endSummaryFieldIndex; $i++) {
-                    $row[$i] = Utils::StringToNumber($row[$i]);
+                    $row[$i] = Utils::stringToNumber($row[$i]);
                 }
             }
 
-            self::_GroupData($row, $result, $groupInfo);
+            self::_groupData($row, $result, $groupInfo);
         }
 
         if (!$groupSettings['lastGroupExpanded']) {
-            self::_GroupData($row, $result, $groupInfo);
+            self::_groupData($row, $result, $groupInfo);
         } else {
             if (isset($groupSettings['skip']) && $groupSettings['skip'] >= 0 &&
                 isset($groupSettings['take']) && $groupSettings['take'] >= 0) {
@@ -213,7 +213,7 @@ class AggregateHelper
         return $result;
     }
 
-    public static function IsLastGroupExpanded($items)
+    public static function isLastGroupExpanded($items)
     {
         $result = true;
         $itemsCount = count($items);
@@ -231,7 +231,7 @@ class AggregateHelper
         return $result;
     }
 
-    public static function GetFieldSetBySelectors($items)
+    public static function getFieldSetBySelectors($items)
     {
         $group = '';
         $sort = '';
@@ -244,15 +244,15 @@ class AggregateHelper
             $desc = false;
 
             if (is_string($item) && strlen($item = trim($item))) {
-                $selectField = $groupField = $sortField = Utils::QuoteStringValue($item);
+                $selectField = $groupField = $sortField = Utils::quoteStringValue($item);
             } else {
                 if (gettype($item) === 'object' && isset($item->selector)) {
-                    $quoteSelector = Utils::QuoteStringValue($item->selector);
+                    $quoteSelector = Utils::quoteStringValue($item->selector);
                     $desc = isset($item->desc) ? $item->desc : false;
 
                     if (isset($item->groupInterval)) {
                         if (is_int($item->groupInterval)) {
-                            $groupField = Utils::QuoteStringValue(
+                            $groupField = Utils::quoteStringValue(
                                 sprintf('%s%s_%d', self::GENERATED_FIELD_PREFIX, $item->selector, $item->groupInterval)
                             );
                             $selectField = sprintf(
@@ -264,7 +264,7 @@ class AggregateHelper
                                 $groupField
                             );
                         } else {
-                            $groupField = Utils::QuoteStringValue(
+                            $groupField = Utils::quoteStringValue(
                                 sprintf('%s%s_%s', self::GENERATED_FIELD_PREFIX, $item->selector, $item->groupInterval)
                             );
                             $selectField = sprintf(
@@ -303,12 +303,12 @@ class AggregateHelper
         ];
     }
 
-    private static function _IsSummaryTypeValid($summaryType)
+    private static function _isSummaryTypeValid($summaryType)
     {
         return in_array($summaryType, [self::MIN_OP, self::MAX_OP, self::AVG_OP, self::COUNT_OP, self::SUM_OP]);
     }
 
-    public static function GetSummaryInfo($expression)
+    public static function getSummaryInfo($expression)
     {
         $result = [];
         $fields = '';
@@ -318,14 +318,14 @@ class AggregateHelper
             if (gettype($item) === 'object' && isset($item->summaryType)) {
                 $summaryType = strtoupper(trim($item->summaryType));
 
-                if (!self::_IsSummaryTypeValid($summaryType)) {
+                if (!self::_isSummaryTypeValid($summaryType)) {
                     continue;
                 }
                 $summaryTypes[] = $summaryType;
                 $fields .= sprintf(
                     '%s(%s) %s %sf%d',
                     strlen($fields) > 0 ? ', ' . $summaryTypes[$index] : $summaryTypes[$index],
-                    (isset($item->selector) && is_string($item->selector)) ? Utils::QuoteStringValue(
+                    (isset($item->selector) && is_string($item->selector)) ? Utils::quoteStringValue(
                         $item->selector
                     ) : '1',
                     self::AS_OP,

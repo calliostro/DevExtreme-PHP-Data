@@ -1,5 +1,7 @@
 <?php
 
+use DevExtreme\Utils;
+
 require_once('TestBase.php');
 
 class UtilsTest extends TestBase
@@ -41,7 +43,7 @@ class UtilsTest extends TestBase
     public function testEscapeExpressionValues()
     {
         $result = "tes't";
-        Utils::EscapeExpressionValues(UtilsTest::$mySQL, $result);
+        Utils::escapeExpressionValues(UtilsTest::$mySQL, $result);
 
         $this->assertEquals("tes\'t", $result);
     }
@@ -51,7 +53,7 @@ class UtilsTest extends TestBase
      */
     public function testQuoteStringValue($value, $isFieldName, $expectedResult)
     {
-        $result = Utils::QuoteStringValue($value, $isFieldName);
+        $result = Utils::quoteStringValue($value, $isFieldName);
 
         $this->assertEquals($expectedResult, $result);
     }
@@ -61,7 +63,7 @@ class UtilsTest extends TestBase
      */
     public function testGetItemValueOrDefault($params, $key, $defaultValue, $expectedResult)
     {
-        $result = Utils::GetItemValueOrDefault($params, $key, $defaultValue);
+        $result = Utils::getItemValueOrDefault($params, $key, $defaultValue);
 
         $this->assertEquals($expectedResult, $result);
     }

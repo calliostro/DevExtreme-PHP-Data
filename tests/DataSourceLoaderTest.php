@@ -1,5 +1,7 @@
 <?php
 
+use DevExtreme\DataSourceLoader;
+
 require_once('TestBase.php');
 
 class DataSourceLoaderTest extends TestBase
@@ -227,7 +229,7 @@ class DataSourceLoaderTest extends TestBase
         $params = [
             'select' => $columns,
         ];
-        $data = DataSourceLoader::Load($this->dbSet, $params);
+        $data = DataSourceLoader::load($this->dbSet, $params);
         $result = isset($data) && is_array($data) && isset($data['data']) && count($data['data']) > 0 ?
             array_keys($data['data'][0]) :
             [];
@@ -239,7 +241,7 @@ class DataSourceLoaderTest extends TestBase
         $params = [
             'requireTotalCount' => true,
         ];
-        $data = DataSourceLoader::Load($this->dbSet, $params);
+        $data = DataSourceLoader::load($this->dbSet, $params);
         $result = isset($data) && is_array($data) &&
             isset($data['data']) && isset($data['totalCount']) &&
             count($data['data']) == $data['totalCount'] && $data['totalCount'] == 31;
@@ -255,7 +257,7 @@ class DataSourceLoaderTest extends TestBase
         $params = [
             'sort' => $sortExpression,
         ];
-        $data = DataSourceLoader::Load($this->dbSet, $params);
+        $data = DataSourceLoader::load($this->dbSet, $params);
         $result = isset($data) && isset($data['data']) && is_array($data['data']) ? $data['data'] : null;
         $dataItemsCount = isset($result) ? count($result) : 0;
 
@@ -280,7 +282,7 @@ class DataSourceLoaderTest extends TestBase
             'take' => 10,
         ];
         $ids = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-        $data = DataSourceLoader::Load($this->dbSet, $params);
+        $data = DataSourceLoader::load($this->dbSet, $params);
         $result = isset($data) && isset($data['data']) && is_array($data['data']) ? $data['data'] : null;
         $itemsCount = isset($result) ? count($result) : 0;
         $paginated = true;
@@ -307,7 +309,7 @@ class DataSourceLoaderTest extends TestBase
         $params = [
             'filter' => $expression,
         ];
-        $data = DataSourceLoader::Load($this->dbSet, $params);
+        $data = DataSourceLoader::load($this->dbSet, $params);
         $result = isset($data) && isset($data['data']) && is_array($data['data']) ? $data['data'] : null;
         $itemsCount = isset($result) ? count($result) : 0;
         $filtered = true;
@@ -335,7 +337,7 @@ class DataSourceLoaderTest extends TestBase
         $params = [
             'group' => $groupExpression,
         ];
-        $data = DataSourceLoader::Load($this->dbSet, $params);
+        $data = DataSourceLoader::load($this->dbSet, $params);
         $result = isset($data) && isset($data['data']) && is_array($data['data']) ? $data['data'] : null;
         $dataItemsCount = isset($result) ? count($result) : 0;
 
@@ -361,7 +363,7 @@ class DataSourceLoaderTest extends TestBase
      */
     public function testLoaderGroupPaging($params, $resultGroupItems)
     {
-        $data = DataSourceLoader::Load($this->dbSet, $params);
+        $data = DataSourceLoader::load($this->dbSet, $params);
         $isPaginated = false;
         $groupCount = 0;
 
@@ -392,7 +394,7 @@ class DataSourceLoaderTest extends TestBase
         $params = [
             'totalSummary' => $summaryExpression,
         ];
-        $data = DataSourceLoader::Load($this->dbSet, $params);
+        $data = DataSourceLoader::load($this->dbSet, $params);
         $result = isset($data) && is_array($data) && isset($data['summary']) ? $data['summary'][0] : 0;
         $this->assertEquals($value, $result);
     }

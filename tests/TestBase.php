@@ -1,5 +1,7 @@
 <?php
 
+use DevExtreme\DbSet;
+
 require_once('ConfigHelper.php');
 if (!class_exists('\PHPUnit_Framework_TestCase')) {
     class_alias('\PHPUnit\Framework\TestCase', '\PHPUnit_Framework_TestCase');
@@ -13,7 +15,7 @@ class TestBase extends PHPUnit_Framework_TestCase
 
     public static function setUpBeforeClass()
     {
-        $dbConfig = ConfigHelper::GetConfiguration();
+        $dbConfig = ConfigHelper::getConfiguration();
         self::$tableName = $dbConfig['tableName'];
         self::$mySQL = new mysqli(
             $dbConfig['serverName'],

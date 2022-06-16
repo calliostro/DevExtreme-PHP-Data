@@ -2,7 +2,7 @@
 
 class ConfigHelper
 {
-    public static function GetConfiguration()
+    public static function getConfiguration()
     {
         $configFileName = getenv('TEST_CONF');
 

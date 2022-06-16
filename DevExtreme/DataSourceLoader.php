@@ -6,52 +6,52 @@ use Exception;
 
 class DataSourceLoader
 {
-    public static function Load($dbSet, $params)
+    public static function load($dbSet, $params)
     {
         if (!isset($dbSet) || get_class($dbSet) != 'DevExtreme\DbSet' || !isset($params) || !is_array($params)) {
             throw new Exception('Invalid params');
         }
 
-        $dbSet->Select(Utils::GetItemValueOrDefault($params, 'select'))
-            ->Filter(Utils::GetItemValueOrDefault($params, 'filter'));
+        $dbSet->select(Utils::getItemValueOrDefault($params, 'select'))
+            ->filter(Utils::getItemValueOrDefault($params, 'filter'));
 
-        $totalSummary = $dbSet->GetTotalSummary(
-            Utils::GetItemValueOrDefault($params, 'totalSummary'),
-            Utils::GetItemValueOrDefault($params, 'filter')
+        $totalSummary = $dbSet->getTotalSummary(
+            Utils::getItemValueOrDefault($params, 'totalSummary'),
+            Utils::getItemValueOrDefault($params, 'filter')
         );
 
-        if ($dbSet->GetLastError() !== null) {
+        if ($dbSet->getLastError() !== null) {
             return null;
         }
 
         $totalCount = (isset($params['requireTotalCount']) && $params['requireTotalCount'] === true)
-            ? $dbSet->GetCount() : null;
+            ? $dbSet->getCount() : null;
 
-        if ($dbSet->GetLastError() !== null) {
+        if ($dbSet->getLastError() !== null) {
             return null;
         }
 
-        $dbSet->Sort(Utils::GetItemValueOrDefault($params, 'sort'));
+        $dbSet->sort(Utils::getItemValueOrDefault($params, 'sort'));
         $groupCount = null;
-        $skip = Utils::GetItemValueOrDefault($params, 'skip');
-        $take = Utils::GetItemValueOrDefault($params, 'take');
+        $skip = Utils::getItemValueOrDefault($params, 'skip');
+        $take = Utils::getItemValueOrDefault($params, 'take');
 
         if (isset($params['group'])) {
             $groupExpression = $params['group'];
-            $groupSummary = Utils::GetItemValueOrDefault($params, 'groupSummary');
-            $dbSet->Group($groupExpression, $groupSummary, $skip, $take);
+            $groupSummary = Utils::getItemValueOrDefault($params, 'groupSummary');
+            $dbSet->group($groupExpression, $groupSummary, $skip, $take);
 
             if (isset($params['requireGroupCount']) && $params['requireGroupCount'] === true) {
-                $groupCount = $dbSet->GetGroupCount();
+                $groupCount = $dbSet->getGroupCount();
             }
         } else {
-            $dbSet->SkipTake($skip, $take);
+            $dbSet->skipTake($skip, $take);
         }
 
         $result = [];
-        $result['data'] = $dbSet->AsArray();
+        $result['data'] = $dbSet->asArray();
 
-        if ($dbSet->GetLastError() !== null) {
+        if ($dbSet->getLastError() !== null) {
             return $result;
         }
 

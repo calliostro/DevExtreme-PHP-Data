@@ -120,7 +120,7 @@ class DbSetAPITest extends TestBase
         ];
     }
 
-    private function GroupSummariesEqual($data, $standard)
+    private function groupSummariesEqual($data, $standard)
     {
         $dataCount = count($data);
         $standardCount = count($standard);
@@ -136,7 +136,7 @@ class DbSetAPITest extends TestBase
                     (count(array_diff($dataSummary, $standardSummary)) === 0)) {
                     if (isset($standard[$i]['items'])) {
                         if (isset($data[$i]['items'])) {
-                            $result = $this->GroupSummariesEqual($data[$i]['items'], $standard[$i]['items']);
+                            $result = $this->groupSummariesEqual($data[$i]['items'], $standard[$i]['items']);
                         }
                     }
 
@@ -282,14 +282,14 @@ class DbSetAPITest extends TestBase
 
     public function testGetCount()
     {
-        $this->assertEquals(31, $this->dbSet->GetCount());
+        $this->assertEquals(31, $this->dbSet->getCount());
     }
 
     public function testSelect()
     {
         $columns = ['BDate', 'Category', 'CustomerName'];
-        $this->dbSet->Select($columns);
-        $data = $this->dbSet->AsArray();
+        $this->dbSet->select($columns);
+        $data = $this->dbSet->asArray();
         $result = count($data) > 0 ? array_keys($data[0]) : [];
         $this->assertEquals($columns, $result);
     }
@@ -299,8 +299,8 @@ class DbSetAPITest extends TestBase
      */
     public function testFilterAnd($filterExpression, $values)
     {
-        $this->dbSet->Filter($filterExpression);
-        $data = $this->dbSet->AsArray();
+        $this->dbSet->filter($filterExpression);
+        $data = $this->dbSet->asArray();
         $result = count($data) > 0 ? array_values($data[0]) : [];
         $this->assertEquals($values, $result);
     }
@@ -313,8 +313,8 @@ class DbSetAPITest extends TestBase
             ['ID', '=', 20],
         ];
         $values = [10, 20];
-        $this->dbSet->Filter($filterExpression);
-        $data = $this->dbSet->AsArray();
+        $this->dbSet->filter($filterExpression);
+        $data = $this->dbSet->asArray();
         $result = [];
         $dataItemsCount = count($data);
 
@@ -331,8 +331,8 @@ class DbSetAPITest extends TestBase
             ['CustomerName', '<>', null],
             ['ID', '>', 29],
         ];
-        $this->dbSet->Filter($filterExpression);
-        $data = $this->dbSet->AsArray();
+        $this->dbSet->filter($filterExpression);
+        $data = $this->dbSet->asArray();
         $this->assertTrue($data !== null && count($data) == 1 && $data[0]['ID'] == 30);
     }
 
@@ -342,8 +342,8 @@ class DbSetAPITest extends TestBase
     public function testSort($sortExpression, $currentValue, $desc, $field)
     {
         $sorted = true;
-        $this->dbSet->Sort($sortExpression);
-        $data = $this->dbSet->AsArray();
+        $this->dbSet->sort($sortExpression);
+        $data = $this->dbSet->asArray();
         $dataItemsCount = count($data);
 
         for ($i = 0; $i < $dataItemsCount; $i++) {
@@ -362,8 +362,8 @@ class DbSetAPITest extends TestBase
 
     public function testSkipTake()
     {
-        $this->dbSet->SkipTake(10, 5);
-        $data = $this->dbSet->AsArray();
+        $this->dbSet->skipTake(10, 5);
+        $data = $this->dbSet->asArray();
         $itemsCount = count($data);
         $firstIndex = $itemsCount > 0 ? $data[0]['ID'] : 0;
         $lastIndex = $itemsCount == 5 ? $data[4]['ID'] : 0;
@@ -376,8 +376,8 @@ class DbSetAPITest extends TestBase
     public function testGroup($groupExpression, $currentValue, $desc, $field, $groupCount)
     {
         $grouped = true;
-        $this->dbSet->Group($groupExpression);
-        $data = $this->dbSet->AsArray();
+        $this->dbSet->group($groupExpression);
+        $data = $this->dbSet->asArray();
         $dataItemsCount = count($data);
 
         for ($i = 0; $i < $dataItemsCount; $i++) {
@@ -399,9 +399,9 @@ class DbSetAPITest extends TestBase
      */
     public function testGroupSummary($group, $groupSummary, $standard)
     {
-        $this->dbSet->Group($group, $groupSummary);
-        $data = $this->dbSet->AsArray();
-        $result = $this->GroupSummariesEqual($data, $standard);
+        $this->dbSet->group($group, $groupSummary);
+        $data = $this->dbSet->asArray();
+        $result = $this->groupSummariesEqual($data, $standard);
         $this->assertTrue($result);
     }
 
@@ -410,7 +410,7 @@ class DbSetAPITest extends TestBase
      */
     public function testGetTotalSummary($summaryExpression, $value)
     {
-        $data = $this->dbSet->GetTotalSummary($summaryExpression);
+        $data = $this->dbSet->getTotalSummary($summaryExpression);
         $result = count($data) > 0 ? $data[0] : 0;
         $this->assertEquals($value, $result);
     }
@@ -424,8 +424,8 @@ class DbSetAPITest extends TestBase
                 'isExpanded' => false,
             ],
         ];
-        $this->dbSet->Group($groupExpression);
-        $groupCount = $this->dbSet->GetGroupCount();
+        $this->dbSet->group($groupExpression);
+        $groupCount = $this->dbSet->getGroupCount();
         $this->assertEquals($groupCount, 4);
     }
 
@@ -434,7 +434,7 @@ class DbSetAPITest extends TestBase
      */
     public function testEscapeExpressionValues($filterExpression, $value)
     {
-        $data = $this->dbSet->Select('ID')->Filter($filterExpression)->AsArray();
+        $data = $this->dbSet->select('ID')->filter($filterExpression)->asArray();
         $result = false;
 
         if (count($data) == 1) {

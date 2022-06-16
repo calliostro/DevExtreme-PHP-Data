@@ -1,5 +1,7 @@
 <?php
 
+use DevExtreme\AggregateHelper;
+
 require_once('TestBase.php');
 
 class AggregateHelperTest extends TestBase
@@ -86,7 +88,7 @@ class AggregateHelperTest extends TestBase
         $sortFields = '`field1`, `field2`, `field3` DESC, `dx_field4_10`, `dx_field5_10` DESC, `dx_field6_year`, `dx_field6_month` DESC';
         $selectFields = '`field1`, `field2`, `field3`, (`field4` - (`field4` % 10)) AS `dx_field4_10`, (`field5` - (`field5` % 10)) AS `dx_field5_10`, YEAR(`field6`) AS `dx_field6_year`, MONTH(`field6`) AS `dx_field6_month`';
 
-        $fieldSet = AggregateHelper::GetFieldSetBySelectors($params);
+        $fieldSet = AggregateHelper::getFieldSetBySelectors($params);
 
         $this->assertEquals($groupFields, $fieldSet['group']);
         $this->assertEquals($sortFields, $fieldSet['sort']);
@@ -126,7 +128,7 @@ class AggregateHelperTest extends TestBase
 
         $query = 'SELECT YEAR(`BDate`) AS `dx_BDate_year`, `Category`, test_products_1.* FROM (SELECT * FROM test_products) AS test_products_1 ORDER BY `dx_BDate_year`, `Category`';
         $queryResult = AggregateHelperTest::$mySQL->query($query);
-        $result = AggregateHelper::GetGroupedDataFromQuery($queryResult, $groupSettings);
+        $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $groupSettings);
         $queryResult->close();
 
         $this->assertEquals(count($expectedResult), count($result));
@@ -199,7 +201,7 @@ class AggregateHelperTest extends TestBase
 
         $query = 'SELECT YEAR(`BDate`) AS `dx_BDate_year`, `Category`, COUNT(1), SUM(`ID`) AS dx_f0 FROM (SELECT * FROM test_products) AS test_products_1 GROUP BY `dx_BDate_year`, `Category` ORDER BY `dx_BDate_year`, `Category`';
         $queryResult = AggregateHelperTest::$mySQL->query($query);
-        $result = AggregateHelper::GetGroupedDataFromQuery($queryResult, $groupSettings);
+        $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $groupSettings);
         $queryResult->close();
 
         $this->assertEquals(count($expectedResult), count($result));
@@ -250,7 +252,7 @@ class AggregateHelperTest extends TestBase
      */
     public function testIsLastGroupExpanded($selectors, $expectedResult)
     {
-        $result = AggregateHelper::IsLastGroupExpanded($selectors);
+        $result = AggregateHelper::isLastGroupExpanded($selectors);
 
         $this->assertTrue($expectedResult === $result);
     }
@@ -273,7 +275,7 @@ class AggregateHelperTest extends TestBase
             'summaryTypes' => ['MAX', 'SUM'],
         ];
 
-        $result = AggregateHelper::GetSummaryInfo($selectors);
+        $result = AggregateHelper::getSummaryInfo($selectors);
 
         $this->assertEquals($expectedResult['fields'], $result['fields']);
         $this->assertEquals(count($expectedResult['summaryTypes']), count($result['summaryTypes']));

@@ -45,12 +45,12 @@ class DbSet
         );
     }
 
-    public function GetLastError()
+    public function getLastError()
     {
         return $this->lastError;
     }
 
-    private function _WrapQuery()
+    private function _wrapQuery()
     {
         $this->tableNameIndex++;
         $this->lastWrappedTableName = "{$this->dbTableName}_{$this->tableNameIndex}";
@@ -66,7 +66,7 @@ class DbSet
         );
     }
 
-    private function _PrepareQueryForLastOperator($operator)
+    private function _prepareQueryForLastOperator($operator)
     {
         $operator = trim($operator);
         $lastOperatorPos = strrpos($this->resultQuery, ' ' . $operator . ' ');
@@ -75,21 +75,21 @@ class DbSet
             $lastBracketPos = strrpos($this->resultQuery, ')');
 
             if (($lastBracketPos !== false && $lastOperatorPos > $lastBracketPos) || ($lastBracketPos === false)) {
-                $this->_WrapQuery();
+                $this->_wrapQuery();
             }
         }
     }
 
-    public function Select($expression)
+    public function select($expression)
     {
-        Utils::EscapeExpressionValues($this->mySQL, $expression);
+        Utils::escapeExpressionValues($this->mySQL, $expression);
 
-        $this->_SelectImpl($expression);
+        $this->_selectImpl($expression);
 
         return $this;
     }
 
-    private function _SelectImpl($expression, $needQuotes = true)
+    private function _selectImpl($expression, $needQuotes = true)
     {
         if (isset($expression)) {
             $fields = '';
@@ -100,7 +100,7 @@ class DbSet
 
             if (is_array($expression)) {
                 foreach ($expression as $field) {
-                    $fields .= (strlen($fields) ? ', ' : '') . ($needQuotes ? Utils::QuoteStringValue(
+                    $fields .= (strlen($fields) ? ', ' : '') . ($needQuotes ? Utils::quoteStringValue(
                             trim($field)
                         ) : trim($field));
                 }
@@ -112,22 +112,22 @@ class DbSet
                 if ($allFieldOperatorPos == 7) {
                     $this->resultQuery = substr_replace($this->resultQuery, $fields, 7, strlen(self::$ALL_FIELDS));
                 } else {
-                    $this->_WrapQuery();
-                    $this->_SelectImpl($expression);
+                    $this->_wrapQuery();
+                    $this->_selectImpl($expression);
                 }
             }
         }
     }
 
-    public function Filter($expression)
+    public function filter($expression)
     {
-        Utils::EscapeExpressionValues($this->mySQL, $expression);
+        Utils::escapeExpressionValues($this->mySQL, $expression);
 
         if (isset($expression) && is_array($expression)) {
-            $result = FilterHelper::GetSqlExprByArray($expression);
+            $result = FilterHelper::getSqlExprByArray($expression);
 
             if (strlen($result)) {
-                $this->_PrepareQueryForLastOperator(self::$WHERE_OP);
+                $this->_prepareQueryForLastOperator(self::$WHERE_OP);
 
                 $this->resultQuery .= sprintf(
                     ' %s %s',
@@ -140,9 +140,9 @@ class DbSet
         return $this;
     }
 
-    public function Sort($expression)
+    public function sort($expression)
     {
-        Utils::EscapeExpressionValues($this->mySQL, $expression);
+        Utils::escapeExpressionValues($this->mySQL, $expression);
 
         if (isset($expression)) {
             $result = '';
@@ -152,12 +152,12 @@ class DbSet
             }
 
             if (is_array($expression)) {
-                $fieldSet = AggregateHelper::GetFieldSetBySelectors($expression);
+                $fieldSet = AggregateHelper::getFieldSetBySelectors($expression);
                 $result = $fieldSet['sort'];
             }
 
             if (strlen($result)) {
-                $this->_PrepareQueryForLastOperator(self::$ORDER_OP);
+                $this->_prepareQueryForLastOperator(self::$ORDER_OP);
 
                 $this->resultQuery .= sprintf(
                     ' %s %s',
@@ -170,13 +170,13 @@ class DbSet
         return $this;
     }
 
-    public function SkipTake($skip, $take)
+    public function skipTake($skip, $take)
     {
         $skip = (!isset($skip) || !is_int($skip) ? 0 : $skip);
         $take = (!isset($take) || !is_int($take) ? self::$MAX_ROW_INDEX : $take);
 
         if ($skip != 0 || $take != 0) {
-            $this->_PrepareQueryForLastOperator(self::$LIMIT_OP);
+            $this->_prepareQueryForLastOperator(self::$LIMIT_OP);
             $this->resultQuery .= sprintf(
                 ' %s %0.0f, %0.0f',
                 self::$LIMIT_OP,
@@ -188,7 +188,7 @@ class DbSet
         return $this;
     }
 
-    private function _CreateGroupCountQuery($firstGroupField, $skip = null, $take = null)
+    private function _createGroupCountQuery($firstGroupField, $skip = null, $take = null)
     {
         $groupCount = $this->groupSettings['groupCount'];
         $lastGroupExpanded = $this->groupSettings['lastGroupExpanded'];
@@ -205,7 +205,7 @@ class DbSet
                 );
 
                 if (isset($skip) || isset($take)) {
-                    $this->SkipTake($skip, $take);
+                    $this->skipTake($skip, $take);
                 }
             }
         } else {
@@ -228,16 +228,16 @@ class DbSet
             );
 
             if (isset($skip) || isset($take)) {
-                $this->groupSettings['skip'] = isset($skip) ? Utils::StringToNumber($skip) : 0;
-                $this->groupSettings['take'] = isset($take) ? Utils::StringToNumber($take) : 0;
+                $this->groupSettings['skip'] = isset($skip) ? Utils::stringToNumber($skip) : 0;
+                $this->groupSettings['take'] = isset($take) ? Utils::stringToNumber($take) : 0;
             }
         }
     }
 
-    public function Group($expression, $groupSummary = null, $skip = null, $take = null)
+    public function group($expression, $groupSummary = null, $skip = null, $take = null)
     {
-        Utils::EscapeExpressionValues($this->mySQL, $expression);
-        Utils::EscapeExpressionValues($this->mySQL, $groupSummary);
+        Utils::escapeExpressionValues($this->mySQL, $expression);
+        Utils::escapeExpressionValues($this->mySQL, $groupSummary);
 
         $this->groupSettings = null;
 
@@ -255,18 +255,18 @@ class DbSet
 
             if (is_array($expression)) {
                 $groupCount = count($expression);
-                $fieldSet = AggregateHelper::GetFieldSetBySelectors($expression);
+                $fieldSet = AggregateHelper::getFieldSetBySelectors($expression);
                 $groupFields = $fieldSet['group'];
                 $selectFields = $fieldSet['select'];
                 $sortFields = $fieldSet['sort'];
-                $lastGroupExpanded = AggregateHelper::IsLastGroupExpanded($expression);
+                $lastGroupExpanded = AggregateHelper::isLastGroupExpanded($expression);
             }
 
             if ($groupCount > 0) {
                 if (!$lastGroupExpanded) {
                     $groupSummaryData = isset($groupSummary) && is_array(
                         $groupSummary
-                    ) ? AggregateHelper::GetSummaryInfo($groupSummary) : null;
+                    ) ? AggregateHelper::getSummaryInfo($groupSummary) : null;
 
                     $selectExpression = sprintf(
                         '%s, %s(1)%s',
@@ -279,8 +279,8 @@ class DbSet
                     );
 
                     $groupCount++;
-                    $this->_WrapQuery();
-                    $this->_SelectImpl($selectExpression, false);
+                    $this->_wrapQuery();
+                    $this->_selectImpl($selectExpression, false);
 
                     $this->resultQuery .= sprintf(
                         ' %s %s',
@@ -288,11 +288,11 @@ class DbSet
                         $groupFields
                     );
 
-                    $this->Sort($sortFields);
+                    $this->sort($sortFields);
                 } else {
-                    $this->_WrapQuery();
+                    $this->_wrapQuery();
                     $selectExpression = "{$selectFields}, {$this->lastWrappedTableName}.*";
-                    $this->_SelectImpl($selectExpression, false);
+                    $this->_selectImpl($selectExpression, false);
 
                     $this->resultQuery .= sprintf(
                         ' %s %s',
@@ -307,22 +307,22 @@ class DbSet
                 $this->groupSettings['summaryTypes'] = !$lastGroupExpanded ? $groupSummaryData['summaryTypes'] ?? null : null;
 
                 $firstGroupField = explode(',', $groupFields)[0];
-                $this->_CreateGroupCountQuery($firstGroupField, $skip, $take);
+                $this->_createGroupCountQuery($firstGroupField, $skip, $take);
             }
         }
 
         return $this;
     }
 
-    public function GetTotalSummary($expression, $filterExpression = null)
+    public function getTotalSummary($expression, $filterExpression = null)
     {
-        Utils::EscapeExpressionValues($this->mySQL, $expression);
-        Utils::EscapeExpressionValues($this->mySQL, $filterExpression);
+        Utils::escapeExpressionValues($this->mySQL, $expression);
+        Utils::escapeExpressionValues($this->mySQL, $filterExpression);
 
         $result = null;
 
         if (isset($expression) && is_array($expression)) {
-            $summaryInfo = AggregateHelper::GetSummaryInfo($expression);
+            $summaryInfo = AggregateHelper::getSummaryInfo($expression);
             $fields = $summaryInfo['fields'];
 
             if (strlen($fields) > 0) {
@@ -334,7 +334,7 @@ class DbSet
                     }
 
                     if (is_array($filterExpression)) {
-                        $filter = FilterHelper::GetSqlExprByArray($filterExpression);
+                        $filter = FilterHelper::getSqlExprByArray($filterExpression);
                     }
                 }
 
@@ -357,7 +357,7 @@ class DbSet
                         $result = $queryResult->fetch_array(MYSQLI_NUM);
 
                         foreach ($result as $i => $item) {
-                            $result[$i] = Utils::StringToNumber($item);
+                            $result[$i] = Utils::stringToNumber($item);
                         }
                     }
                 }
@@ -371,7 +371,7 @@ class DbSet
         return $result;
     }
 
-    public function GetGroupCount()
+    public function getGroupCount()
     {
         $result = 0;
 
@@ -384,7 +384,7 @@ class DbSet
             } else {
                 if ($queryResult->num_rows > 0) {
                     $row = $queryResult->fetch_array(MYSQLI_NUM);
-                    $result = Utils::StringToNumber($row[0]);
+                    $result = Utils::stringToNumber($row[0]);
                 }
             }
 
@@ -396,7 +396,7 @@ class DbSet
         return $result;
     }
 
-    public function GetCount()
+    public function getCount()
     {
         $result = 0;
 
@@ -420,7 +420,7 @@ class DbSet
             } else {
                 if ($queryResult->num_rows > 0) {
                     $row = $queryResult->fetch_array(MYSQLI_NUM);
-                    $result = Utils::StringToNumber($row[0]);
+                    $result = Utils::stringToNumber($row[0]);
                 }
             }
 
@@ -432,7 +432,7 @@ class DbSet
         return $result;
     }
 
-    public function AsArray()
+    public function asArray()
     {
         $result = null;
 
@@ -444,7 +444,7 @@ class DbSet
                 $this->lastError = $this->mySQL->error;
             } else {
                 if (isset($this->groupSettings)) {
-                    $result = AggregateHelper::GetGroupedDataFromQuery($queryResult, $this->groupSettings);
+                    $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $this->groupSettings);
                 } else {
                     $result = $queryResult->fetch_all(MYSQLI_ASSOC);
                 }
@@ -456,9 +456,9 @@ class DbSet
         return $result;
     }
 
-    public function Insert($values)
+    public function insert($values)
     {
-        Utils::EscapeExpressionValues($this->mySQL, $values);
+        Utils::escapeExpressionValues($this->mySQL, $values);
 
         $result = null;
 
@@ -467,8 +467,8 @@ class DbSet
             $fieldValues = '';
 
             foreach ($values as $prop => $value) {
-                $fields .= (strlen($fields) ? ', ' : '') . Utils::QuoteStringValue($prop);
-                $fieldValues .= (strlen($fieldValues) ? ', ' : '') . Utils::QuoteStringValue($value, false);
+                $fields .= (strlen($fields) ? ', ' : '') . Utils::quoteStringValue($prop);
+                $fieldValues .= (strlen($fieldValues) ? ', ' : '') . Utils::quoteStringValue($value, false);
             }
 
             if (strlen($fields) > 0) {
@@ -493,10 +493,10 @@ class DbSet
         return $result;
     }
 
-    public function Update($key, $values)
+    public function update($key, $values)
     {
-        Utils::EscapeExpressionValues($this->mySQL, $key);
-        Utils::EscapeExpressionValues($this->mySQL, $values);
+        Utils::escapeExpressionValues($this->mySQL, $key);
+        Utils::escapeExpressionValues($this->mySQL, $values);
 
         $result = null;
 
@@ -507,8 +507,8 @@ class DbSet
                 $templ = strlen($fields) == 0 ? '%s = %s' : ', %s = %s';
                 $fields .= sprintf(
                     $templ,
-                    Utils::QuoteStringValue($prop),
-                    Utils::QuoteStringValue($value, false)
+                    Utils::quoteStringValue($prop),
+                    Utils::quoteStringValue($value, false)
                 );
             }
 
@@ -520,7 +520,7 @@ class DbSet
                     self::$SET_OP,
                     $fields,
                     self::$WHERE_OP,
-                    FilterHelper::GetSqlExprByKey($key)
+                    FilterHelper::getSqlExprByKey($key)
                 );
                 $this->lastError = null;
 
@@ -535,9 +535,9 @@ class DbSet
         return $result;
     }
 
-    public function Delete($key)
+    public function delete($key)
     {
-        Utils::EscapeExpressionValues($this->mySQL, $key);
+        Utils::escapeExpressionValues($this->mySQL, $key);
         $result = null;
 
         if (isset($key) && is_array($key)) {
@@ -547,7 +547,7 @@ class DbSet
                 self::$FROM_OP,
                 $this->dbTableName,
                 self::$WHERE_OP,
-                FilterHelper::GetSqlExprByKey($key)
+                FilterHelper::getSqlExprByKey($key)
             );
             $this->lastError = null;
 

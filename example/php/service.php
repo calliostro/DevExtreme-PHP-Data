@@ -2,7 +2,7 @@
 
 require_once('DataController.php');
 
-function GetParseParams($params, $assoc = false)
+function getParseParams($params, $assoc = false)
 {
     if (!is_array($params)) {
         return $params;
@@ -20,7 +20,7 @@ function GetParseParams($params, $assoc = false)
     return $result;
 }
 
-function GetParamsFromInput()
+function getParamsFromInput()
 {
     $result = null;
     $content = file_get_contents('php://input');
@@ -28,7 +28,7 @@ function GetParamsFromInput()
     if ($content !== false) {
         $params = [];
         parse_str($content, $params);
-        $result = GetParseParams($params, true);
+        $result = getParseParams($params, true);
     }
 
     return $result;
@@ -36,27 +36,27 @@ function GetParamsFromInput()
 
 $response = null;
 $controller = new DataController();
-$controller->FillDbIfEmpty();
+$controller->fillDbIfEmpty();
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
-        $params = GetParseParams($_GET);
-        $response = $controller->Get($params);
+        $params = getParseParams($_GET);
+        $response = $controller->get($params);
         break;
 
     case 'POST':
-        $params = GetParamsFromInput();
-        $response = $controller->Post($params['values']);
+        $params = getParamsFromInput();
+        $response = $controller->post($params['values']);
         break;
 
     case 'PUT':
-        $params = GetParamsFromInput();
-        $response = $controller->Put($params['key'], $params['values']);
+        $params = getParamsFromInput();
+        $response = $controller->put($params['key'], $params['values']);
         break;
 
     case 'DELETE':
-        $params = GetParamsFromInput();
-        $response = $controller->Delete($params['key']);
+        $params = getParamsFromInput();
+        $response = $controller->delete($params['key']);
         break;
 }
 

@@ -1,7 +1,7 @@
 <?php
 
 require_once('../../DevExtreme/LoadHelper.php');
-spl_autoload_register(['DevExtreme\LoadHelper', 'LoadModule']);
+spl_autoload_register(['DevExtreme\LoadHelper', 'loadModule']);
 
 use DevExtreme\DbSet;
 use DevExtreme\DataSourceLoader;
@@ -17,9 +17,9 @@ class DataController
         $this->dbSet = new DbSet($mySQL, 'tableName');
     }
 
-    public function FillDbIfEmpty()
+    public function fillDbIfEmpty()
     {
-        if ($this->dbSet->GetCount() == 0) {
+        if ($this->dbSet->getCount() == 0) {
             $curDateString = '2013-1-1';
 
             for ($i = 1; $i <= 10000; $i++) {
@@ -33,34 +33,34 @@ class DataController
                     'BDate' => $curDT->format('Y-m-d'),
                 ];
 
-                $this->dbSet->Insert($item);
+                $this->dbSet->insert($item);
             }
         }
     }
 
-    public function Get($params)
+    public function get($params)
     {
-        $result = DataSourceLoader::Load($this->dbSet, $params);
+        $result = DataSourceLoader::load($this->dbSet, $params);
 
         if (!isset($result)) {
-            $result = $this->dbSet->GetLastError();
+            $result = $this->dbSet->getLastError();
         }
 
         return $result;
     }
 
-    public function Post($values)
+    public function post($values)
     {
-        $result = $this->dbSet->Insert($values);
+        $result = $this->dbSet->insert($values);
 
         if (!isset($result)) {
-            $result = $this->dbSet->GetLastError();
+            $result = $this->dbSet->getLastError();
         }
 
         return $result;
     }
 
-    public function Put($key, $values)
+    public function put($key, $values)
     {
         if (!isset($key) || (isset($values) && !is_array($values))) {
             throw new Exception('Invalid params');
@@ -72,16 +72,16 @@ class DataController
             $key['ID'] = $keyVal;
         }
 
-        $result = $this->dbSet->Update($key, $values);
+        $result = $this->dbSet->update($key, $values);
 
         if (!isset($result)) {
-            $result = $this->dbSet->GetLastError();
+            $result = $this->dbSet->getLastError();
         }
 
         return $result;
     }
 
-    public function Delete($key)
+    public function delete($key)
     {
         if (!isset($key)) {
             throw new Exception('Invalid params');
@@ -93,10 +93,10 @@ class DataController
             $key['ID'] = $keyVal;
         }
 
-        $result = $this->dbSet->Delete($key);
+        $result = $this->dbSet->delete($key);
 
         if (!isset($result)) {
-            $result = $this->dbSet->GetLastError();
+            $result = $this->dbSet->getLastError();
         }
 
         return $result;

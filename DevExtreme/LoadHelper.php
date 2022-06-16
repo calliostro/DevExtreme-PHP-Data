@@ -4,7 +4,7 @@ namespace DevExtreme;
 
 class LoadHelper
 {
-    public static function LoadModule($className)
+    public static function loadModule($className)
     {
         $namespaceNamePos = strpos($className, __NAMESPACE__);
 

@@ -12,10 +12,10 @@ class FilterHelper
     private static $NOT_OP = 'NOT';
     private static $IS_OP = 'IS';
 
-    private static function _GetSqlFieldName($field)
+    private static function _getSqlFieldName($field)
     {
         $fieldParts = explode('.', $field);
-        $fieldName = Utils::QuoteStringValue(trim($fieldParts[0]));
+        $fieldName = Utils::quoteStringValue(trim($fieldParts[0]));
 
         if (count($fieldParts) != 2) {
             return $fieldName;
@@ -43,15 +43,15 @@ class FilterHelper
         return sprintf($fieldPattern, $sqlDateFunction, $fieldName);
     }
 
-    private static function _GetSimpleSqlExpr($expression)
+    private static function _getSimpleSqlExpr($expression)
     {
         $result = '';
         $itemsCount = count($expression);
-        $fieldName = self::_GetSqlFieldName(trim($expression[0]));
+        $fieldName = self::_getSqlFieldName(trim($expression[0]));
 
         if ($itemsCount == 2) {
             $val = $expression[1];
-            $result = sprintf('%s = %s', $fieldName, Utils::QuoteStringValue($val, false));
+            $result = sprintf('%s = %s', $fieldName, Utils::quoteStringValue($val, false));
         }
 
         if ($itemsCount == 3) {
@@ -60,7 +60,7 @@ class FilterHelper
             $pattern = '';
 
             if (is_null($val)) {
-                $val = Utils::QuoteStringValue($val, false);
+                $val = Utils::quoteStringValue($val, false);
                 $pattern = '%s %s %s';
 
                 switch ($clause) {
@@ -81,7 +81,7 @@ class FilterHelper
                     case '<':
                     case '<=':
                         $pattern = '%s %s %s';
-                        $val = Utils::QuoteStringValue($val, false);
+                        $val = Utils::quoteStringValue($val, false);
                         break;
 
                     case 'startswith':
@@ -119,7 +119,7 @@ class FilterHelper
         return $result;
     }
 
-    public static function GetSqlExprByArray($expression)
+    public static function getSqlExprByArray($expression)
     {
         $result = '(';
         $prevItemWasArray = false;
@@ -134,7 +134,7 @@ class FilterHelper
                         continue;
                     }
 
-                    $result .= (isset($expression) && is_array($expression)) ? self::_GetSimpleSqlExpr(
+                    $result .= (isset($expression) && is_array($expression)) ? self::_getSimpleSqlExpr(
                         $expression
                     ) : '';
 
@@ -155,7 +155,7 @@ class FilterHelper
                     $result .= sprintf(' %s ', self::$AND_OP);
                 }
 
-                $result .= self::GetSqlExprByArray($item);
+                $result .= self::getSqlExprByArray($item);
                 $prevItemWasArray = true;
             }
         }
@@ -165,7 +165,7 @@ class FilterHelper
         return $result;
     }
 
-    public static function GetSqlExprByKey($key)
+    public static function getSqlExprByKey($key)
     {
         $result = '';
 
@@ -176,8 +176,8 @@ class FilterHelper
 
             $result .= sprintf(
                 $templ,
-                Utils::QuoteStringValue($prop),
-                Utils::QuoteStringValue($value, false)
+                Utils::quoteStringValue($prop),
+                Utils::quoteStringValue($value, false)
             );
         }
 
