@@ -56,7 +56,7 @@ class DataController {
             }
         }
         else {
-            throw new Exeption("Invalid params");
+            throw new Exception("Invalid params");
         }
         return $result;
     }
@@ -74,7 +74,7 @@ class DataController {
             }
         }
         else {
-            throw new Exeption("Invalid params");
+            throw new Exception("Invalid params");
         }
         return $result;
     }

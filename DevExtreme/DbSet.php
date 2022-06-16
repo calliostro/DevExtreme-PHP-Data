@@ -214,7 +214,7 @@ class DbSet {
                 $this->groupSettings = array();
                 $this->groupSettings["groupCount"] = $groupCount;
                 $this->groupSettings["lastGroupExpanded"] = $lastGroupExpanded;
-                $this->groupSettings["summaryTypes"] = !$lastGroupExpanded ? $groupSummaryData["summaryTypes"] : NULL;
+                $this->groupSettings["summaryTypes"] = !$lastGroupExpanded ? $groupSummaryData["summaryTypes"] ?? null : null;
                 $firstGroupField = explode(",", $groupFields)[0];
                 $this->_CreateGroupCountQuery($firstGroupField, $skip, $take);
             }

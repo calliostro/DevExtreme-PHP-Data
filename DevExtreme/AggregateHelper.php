@@ -95,7 +95,7 @@ class AggregateHelper {
         if ($itemsCount) {
             $currentItem = &$resultItems[$itemsCount - 1];
             if (!$groupInfo["lastGroupExpanded"]) {
-                if ($currentItem["key"] != $row[$groupInfo["groupIndex"]] || !isset($row)) {
+                if (!isset($row) || $currentItem["key"] != $row[$groupInfo["groupIndex"]]) {
                     if ($groupInfo["groupIndex"] == 0 && $groupInfo["groupCount"] > 2) {
                         self::_RecalculateGroupCountAndSummary($currentItem, $groupInfo);
                     }
