@@ -1,6 +1,6 @@
 {
   "name": "calliostro/dev-extreme-php-data",
-  "description": "src/DevExtreme data layer extension for PHP 8 with Doctrine",
+  "description": "DevExtreme data layer extension for PHP 8",
   "type": "library",
   "license": "MIT",
   "autoload": {
