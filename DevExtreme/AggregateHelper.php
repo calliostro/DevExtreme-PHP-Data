@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace DevExtreme;
 
-use mysqli_result;
+use PDO;
+use PDOStatement;
 
 final class AggregateHelper
 {
@@ -132,7 +133,7 @@ final class AggregateHelper
             $currentItem = &$resultItems[$itemsCount - 1];
 
             if (!$groupInfo['lastGroupExpanded']) {
-                if (!isset($row) || $currentItem['key'] != $row[$groupInfo['groupIndex']]) {
+                if ($row == null || $currentItem['key'] != $row[$groupInfo['groupIndex']]) {
                     if ($groupInfo['groupIndex'] == 0 && $groupInfo['groupCount'] > 2) {
                         self::_recalculateGroupCountAndSummary($currentItem, $groupInfo);
                     }
@@ -165,7 +166,20 @@ final class AggregateHelper
         }
     }
 
-    public static function getGroupedDataFromQuery(mysqli_result $queryResult, array $groupSettings): array
+    private static function _getQueryFieldNamesFromQueryResult(PDOStatement $queryResult): array
+    {
+        $queryFields = [];
+        $count = $queryResult->columnCount();
+
+        for ($i = 0; $i < $count; $i++) {
+            $meta = $queryResult->getColumnMeta($i);
+            $queryFields[] = $meta['name'];
+        }
+
+        return $queryFields;
+    }
+
+    public static function getGroupedDataFromQuery(PDOStatement $queryResult, array $groupSettings): array
     {
         $result = [];
         $groupSummaryTypes = null;
@@ -174,10 +188,10 @@ final class AggregateHelper
         $endSummaryFieldIndex = null;
 
         if ($groupSettings['lastGroupExpanded']) {
-            $queryFields = $queryResult->fetch_fields();
+            $queryFields = self::_getQueryFieldNamesFromQueryResult($queryResult);
             $dataFieldNames = [];
             for ($i = $groupSettings['groupCount']; $i < count($queryFields); $i++) {
-                $dataFieldNames[] = $queryFields[$i]->name;
+                $dataFieldNames[] = $queryFields[$i];
             }
         }
 
@@ -195,8 +209,8 @@ final class AggregateHelper
             'dataFieldNames' => $dataFieldNames,
         ];
 
-        while ($row = $queryResult->fetch_array(MYSQLI_NUM)) {
-            if (isset($startSummaryFieldIndex)) {
+        while ($row = $queryResult->fetch(PDO::FETCH_NUM)) {
+            if ($startSummaryFieldIndex != null) {
                 for ($i = $startSummaryFieldIndex; $i <= $endSummaryFieldIndex; $i++) {
                     $row[$i] = Utils::stringToNumber($row[$i]);
                 }
@@ -206,7 +220,7 @@ final class AggregateHelper
         }
 
         if (!$groupSettings['lastGroupExpanded']) {
-            self::_groupData($row, $result, $groupInfo);
+            self::_groupData(null, $result, $groupInfo);
         } else {
             if (isset($groupSettings['skip']) && $groupSettings['skip'] >= 0 &&
                 isset($groupSettings['take']) && $groupSettings['take'] >= 0) {
@@ -323,6 +337,7 @@ final class AggregateHelper
                 if (!self::_isSummaryTypeValid($summaryType)) {
                     continue;
                 }
+
                 $summaryTypes[] = $summaryType;
                 $fields .= sprintf(
                     '%s(%s) %s %sf%d',

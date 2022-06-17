@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace DevExtreme\Tests;
 
 use DevExtreme\DbSet;
-use mysqli;
+use PDO;
 use PHPUnit\Framework\TestCase;
 
 require_once('ConfigHelper.php');
 
 class TestBase extends TestCase
 {
-    protected static mysqli $mySQL;
+    protected static PDO $pdo;
     protected static string $tableName;
     protected DbSet $dbSet;
 
@@ -20,21 +20,15 @@ class TestBase extends TestCase
     {
         $dbConfig = ConfigHelper::getConfiguration();
         self::$tableName = $dbConfig['tableName'];
-        self::$mySQL = new mysqli(
-            $dbConfig['serverName'],
+        self::$pdo = new PDO(
+            "mysql:host={$dbConfig['serverName']};dbname={$dbConfig['databaseName']}",
             $dbConfig['user'],
-            $dbConfig['passowrd'],
-            $dbConfig['databaseName']
+            $dbConfig['passowrd']
         );
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        self::$mySQL->close();
     }
 
     protected function setUp(): void
     {
-        $this->dbSet = new DbSet(self::$mySQL, self::$tableName);
+        $this->dbSet = new DbSet(self::$pdo, self::$tableName);
     }
 }

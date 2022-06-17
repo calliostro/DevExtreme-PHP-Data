@@ -129,9 +129,9 @@ final class AggregateHelperTest extends TestBase
         ];
 
         $query = 'SELECT YEAR(`BDate`) AS `dx_BDate_year`, `Category`, test_products_1.* FROM (SELECT * FROM test_products) AS test_products_1 ORDER BY `dx_BDate_year`, `Category`';
-        $queryResult = AggregateHelperTest::$mySQL->query($query);
+        $queryResult = AggregateHelperTest::$pdo->query($query);
         $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $groupSettings);
-        $queryResult->close();
+        $queryResult->closeCursor();
 
         $this->assertSameSize($expectedResult, $result);
 
@@ -202,9 +202,9 @@ final class AggregateHelperTest extends TestBase
         ];
 
         $query = 'SELECT YEAR(`BDate`) AS `dx_BDate_year`, `Category`, COUNT(1), SUM(`ID`) AS dx_f0 FROM (SELECT * FROM test_products) AS test_products_1 GROUP BY `dx_BDate_year`, `Category` ORDER BY `dx_BDate_year`, `Category`';
-        $queryResult = AggregateHelperTest::$mySQL->query($query);
+        $queryResult = AggregateHelperTest::$pdo->query($query);
         $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $groupSettings);
-        $queryResult->close();
+        $queryResult->closeCursor();
 
         $this->assertSameSize($expectedResult, $result);
 

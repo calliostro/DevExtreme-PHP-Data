@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DevExtreme;
 
-use mysqli;
+use PDO;
 
 final class DbSet
 {
@@ -26,13 +26,13 @@ final class DbSet
     private int $tableNameIndex = 0;
     private string $lastWrappedTableName;
     private string $resultQuery;
-    private mysqli $mySQL;
-    private ?string $lastError = null;
+    private PDO $pdo;
+    private ?array $lastError = null;
     private ?array $groupSettings = null;
 
-    public function __construct(mysqli $mySQL, string $table)
+    public function __construct(PDO $pdo, string $table)
     {
-        $this->mySQL = $mySQL;
+        $this->pdo = $pdo;
         $this->dbTableName = $table;
 
         $this->resultQuery = sprintf(
@@ -44,7 +44,7 @@ final class DbSet
         );
     }
 
-    public function getLastError(): ?string
+    public function getLastError(): ?array
     {
         return $this->lastError;
     }
@@ -81,7 +81,7 @@ final class DbSet
 
     public function select(mixed $expression): self
     {
-        Utils::escapeExpressionValues($this->mySQL, $expression);
+        Utils::escapeExpressionValues($this->pdo, $expression);
 
         $this->_selectImpl($expression);
 
@@ -123,7 +123,7 @@ final class DbSet
      */
     public function filter(mixed $expression = null): self
     {
-        Utils::escapeExpressionValues($this->mySQL, $expression);
+        Utils::escapeExpressionValues($this->pdo, $expression);
 
         if (is_array($expression)) {
             $result = FilterHelper::getSqlExprByArray($expression);
@@ -144,7 +144,7 @@ final class DbSet
 
     public function sort(mixed $expression = null): self
     {
-        Utils::escapeExpressionValues($this->mySQL, $expression);
+        Utils::escapeExpressionValues($this->pdo, $expression);
 
         if ($expression != null) {
             $result = '';
@@ -238,8 +238,8 @@ final class DbSet
 
     public function group(mixed $expression, ?array $groupSummary = null, ?int $skip = null, ?int $take = null): self
     {
-        Utils::escapeExpressionValues($this->mySQL, $expression);
-        Utils::escapeExpressionValues($this->mySQL, $groupSummary);
+        Utils::escapeExpressionValues($this->pdo, $expression);
+        Utils::escapeExpressionValues($this->pdo, $groupSummary);
 
         $this->groupSettings = null;
 
@@ -321,8 +321,8 @@ final class DbSet
      */
     public function getTotalSummary(mixed $expression, string|array|null $filterExpression = null): ?array
     {
-        Utils::escapeExpressionValues($this->mySQL, $expression);
-        Utils::escapeExpressionValues($this->mySQL, $filterExpression);
+        Utils::escapeExpressionValues($this->pdo, $expression);
+        Utils::escapeExpressionValues($this->pdo, $filterExpression);
 
         $result = null;
 
@@ -351,13 +351,13 @@ final class DbSet
                 );
 
                 $this->lastError = null;
-                $queryResult = $this->mySQL->query($totalSummaryQuery);
+                $queryResult = $this->pdo->query($totalSummaryQuery);
 
                 if (!$queryResult) {
-                    $this->lastError = $this->mySQL->error;
+                    $this->lastError = $this->pdo->errorInfo();
                 } else {
-                    if ($queryResult->num_rows > 0) {
-                        $result = $queryResult->fetch_array(MYSQLI_NUM);
+                    if ($queryResult->rowCount() > 0) {
+                        $result = $queryResult->fetch(PDO::FETCH_NUM);
 
                         foreach ($result as $i => $item) {
                             $result[$i] = Utils::stringToNumber($item);
@@ -366,7 +366,7 @@ final class DbSet
                 }
 
                 if ($queryResult !== false) {
-                    $queryResult->close();
+                    $queryResult->closeCursor();
                 }
             }
         }
@@ -380,19 +380,19 @@ final class DbSet
 
         if (isset($this->groupSettings) && isset($this->groupSettings['groupItemCountQuery'])) {
             $this->lastError = null;
-            $queryResult = $this->mySQL->query($this->groupSettings['groupItemCountQuery']);
+            $queryResult = $this->pdo->query($this->groupSettings['groupItemCountQuery']);
 
             if (!$queryResult) {
-                $this->lastError = $this->mySQL->error;
+                $this->lastError = $this->pdo->errorInfo();
             } else {
-                if ($queryResult->num_rows > 0) {
-                    $row = $queryResult->fetch_array(MYSQLI_NUM);
+                if ($queryResult->rowCount() > 0) {
+                    $row = $queryResult->fetch(PDO::FETCH_NUM);
                     $result = Utils::stringToNumber($row[0]);
                 }
             }
 
             if ($queryResult !== false) {
-                $queryResult->close();
+                $queryResult->closeCursor();
             }
         }
 
@@ -415,19 +415,19 @@ final class DbSet
         );
 
         $this->lastError = null;
-        $queryResult = $this->mySQL->query($countQuery);
+        $queryResult = $this->pdo->query($countQuery);
 
         if (!$queryResult) {
-            $this->lastError = $this->mySQL->error;
+            $this->lastError = $this->pdo->errorInfo();
         } else {
-            if ($queryResult->num_rows > 0) {
-                $row = $queryResult->fetch_array(MYSQLI_NUM);
+            if ($queryResult->rowCount() > 0) {
+                $row = $queryResult->fetch(PDO::FETCH_NUM);
                 $result = Utils::stringToNumber($row[0]);
             }
         }
 
         if ($queryResult !== false) {
-            $queryResult->close();
+            $queryResult->closeCursor();
         }
 
         return $result;
@@ -438,18 +438,18 @@ final class DbSet
         $result = null;
 
         $this->lastError = null;
-        $queryResult = $this->mySQL->query($this->resultQuery);
+        $queryResult = $this->pdo->query($this->resultQuery);
 
         if (!$queryResult) {
-            $this->lastError = $this->mySQL->error;
+            $this->lastError = $this->pdo->errorInfo();
         } else {
             if (isset($this->groupSettings)) {
                 $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $this->groupSettings);
             } else {
-                $result = $queryResult->fetch_all(MYSQLI_ASSOC);
+                $result = $queryResult->fetchAll(PDO::FETCH_ASSOC);
             }
 
-            $queryResult->close();
+            $queryResult->closeCursor();
         }
 
         return $result;
@@ -457,7 +457,7 @@ final class DbSet
 
     public function insert(array $values): ?int
     {
-        Utils::escapeExpressionValues($this->mySQL, $values);
+        Utils::escapeExpressionValues($this->pdo, $values);
 
         $result = null;
         $fields = '';
@@ -479,10 +479,12 @@ final class DbSet
             );
             $this->lastError = null;
 
-            if ($this->mySQL->query($queryString)) {
-                $result = $this->mySQL->affected_rows;
+            $queryResult = $this->pdo->query($queryString);
+
+            if (!$queryResult) {
+                $this->lastError = $this->pdo->errorInfo();
             } else {
-                $this->lastError = $this->mySQL->error;
+                $result = $queryResult->rowCount();
             }
         }
 
@@ -491,8 +493,8 @@ final class DbSet
 
     public function update(array $key, array $values): ?int
     {
-        Utils::escapeExpressionValues($this->mySQL, $key);
-        Utils::escapeExpressionValues($this->mySQL, $values);
+        Utils::escapeExpressionValues($this->pdo, $key);
+        Utils::escapeExpressionValues($this->pdo, $values);
 
         $result = null;
         $fields = '';
@@ -518,10 +520,12 @@ final class DbSet
             );
             $this->lastError = null;
 
-            if ($this->mySQL->query($queryString)) {
-                $result = $this->mySQL->affected_rows;
+            $queryResult = $this->pdo->query($queryString);
+
+            if (!$queryResult) {
+                $this->lastError = $this->pdo->errorInfo();
             } else {
-                $this->lastError = $this->mySQL->error;
+                $result = $queryResult->rowCount();
             }
         }
 
@@ -530,7 +534,7 @@ final class DbSet
 
     public function delete(array $key): ?int
     {
-        Utils::escapeExpressionValues($this->mySQL, $key);
+        Utils::escapeExpressionValues($this->pdo, $key);
 
         $result = null;
 
@@ -544,10 +548,12 @@ final class DbSet
         );
         $this->lastError = null;
 
-        if ($this->mySQL->query($queryString)) {
-            $result = $this->mySQL->affected_rows;
+        $queryResult = $this->pdo->query($queryString);
+
+        if (!$queryResult) {
+            $this->lastError = $this->pdo->errorInfo();
         } else {
-            $this->lastError = $this->mySQL->error;
+            $result = $queryResult->rowCount();
         }
 
         return $result;

@@ -32,15 +32,15 @@ use DevExtreme\DataSourceLoader;
 
 To load data, perform the following steps.
 
-* Create the [mysqli](http://php.net/manual/en/book.mysqli.php) instance passing your MySQL server user credentials to its constructor.
-* Create the ```DbSet``` instance passing the ```mysqli``` instance as a first parameter and a table name from which you wish to load data as a second parameter
+* Create the [PDO](https://www.php.net/manual/en/book.pdo.php) instance passing your MySQL server user credentials to its constructor.
+* Create the ```DbSet``` instance passing the ```PDO``` instance as a first parameter and a table name from which you wish to load data as a second parameter
 to the ```DbSet``` constructor.
-* Get parameters received from the client side and pass them with the ```DbSet``` instance to the ```Load``` method of the ```DataSourceLoader``` class. This
+* Get parameters received from the client side and pass them with the ```DbSet``` instance to the ```load``` method of the ```DataSourceLoader``` class. This
 is a static method and you will not need to create an instance of the class. The following code snippet shows how to do this:
 
 ```PHP
-$mySQL = new mysqli('serverName', 'userName', 'password', 'databaseName');
-$dbSet = new DbSet($mySQL, 'tableName');
+$pdo = new PDO('mysql:host=serverName;dbname=databaseName', 'userName', 'password');
+$dbSet = new DbSet($pdo, 'tableName');
 $result = DataSourceLoader::load($dbSet, $params);
 ```
 Note that parameters (```$params```) must be passed as an associative [array](http://php.net/manual/en/language.types.array.php).

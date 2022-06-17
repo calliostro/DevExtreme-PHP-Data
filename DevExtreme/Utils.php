@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DevExtreme;
 
-use mysqli;
+use PDO;
 
 final class Utils
 {
@@ -51,22 +51,22 @@ final class Utils
         return !str_contains((string)$str, $decimalPoint) ? intval($str) : floatval($str);
     }
 
-    public static function escapeExpressionValues(mysqli $mySql, mixed &$expression = null): void
+    public static function escapeExpressionValues(PDO $pdo, mixed &$expression = null): void
     {
         if ($expression != null) {
             if (is_string($expression)) {
-                $expression = $mySql->real_escape_string($expression);
+                $expression = self::_pdo_escape_string($expression);
             } else {
                 if (is_array($expression)) {
                     foreach ($expression as &$arr_value) {
-                        self::escapeExpressionValues($mySql, $arr_value);
+                        self::escapeExpressionValues($pdo, $arr_value);
                     }
 
                     unset($arr_value);
                 } else {
                     if (gettype($expression) === 'object') {
                         foreach ($expression as $prop => $value) {
-                            self::escapeExpressionValues($mySql, $expression->$prop);
+                            self::escapeExpressionValues($pdo, $expression->$prop);
                         }
                     }
                 }
@@ -78,7 +78,7 @@ final class Utils
     {
         if (is_string($value)) {
             if (!$isFieldName) {
-                $value = self::_convertDateTimeToMySQLValue($value);
+                $value = self::_convertDateTimeToPdoValue($value);
             } else {
                 $value = str_replace(self::FORBIDDEN_CHARACTERS, '', $value);
             }
@@ -95,6 +95,25 @@ final class Utils
         return $params[$key] ?? $defaultValue;
     }
 
+    private static function _pdo_escape_string(string $unescaped_string): string
+    {
+        $replacementMap = [
+            "\0" => "\\0",
+            "\n" => "\\n",
+            "\r" => "\\r",
+            "\t" => "\\t",
+            chr(26) => "\\Z",
+            chr(8) => "\\b",
+            '"' => '\"',
+            "'" => "\'",
+//            '_' => '\_',
+//            '%' => '\%',
+            '\\' => '\\\\'
+        ];
+
+        return \strtr($unescaped_string, $replacementMap);
+    }
+
     private static function _convertDatePartToISOValue(string $date): string
     {
         $dateParts = explode('/', $date);
@@ -102,7 +121,7 @@ final class Utils
         return sprintf('%s-%s-%s', $dateParts[2], $dateParts[0], $dateParts[1]);
     }
 
-    private static function _convertDateTimeToMySQLValue(string $strValue): string
+    private static function _convertDateTimeToPdoValue(string $strValue): string
     {
         $result = $strValue;
 
