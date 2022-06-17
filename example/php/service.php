@@ -11,9 +11,9 @@ function getParseParams($params, $assoc = false)
     $result = [];
 
     foreach ($params as $key => $value) {
-        $result[$key] = json_decode($params[$key], $assoc);
+        $result[$key] = json_decode($value, $assoc);
         if ($result[$key] === null) {
-            $result[$key] = $params[$key];
+            $result[$key] = $value;
         }
     }
 

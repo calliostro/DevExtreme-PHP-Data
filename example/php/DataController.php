@@ -15,8 +15,8 @@ final class DataController
     public function __construct()
     {
         //TODO: use your database credentials
-        $mySQL = new mysqli('serverName', 'userName', 'password', 'databaseName');
-        $this->dbSet = new DbSet($mySQL, 'tableName');
+        $pdo = new PDO('mysql:host=serverName;dbname=databaseName', 'userName', 'password');
+        $this->dbSet = new DbSet($pdo, 'tableName');
     }
 
     /**
