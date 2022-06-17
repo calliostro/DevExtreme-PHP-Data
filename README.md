@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/DevExpress/DevExtreme-PHP-Data.svg?branch=master)](https://travis-ci.org/DevExpress/DevExtreme-PHP-Data)
 # DevExtreme PHP Data
----
 
 This library is intended for loading data from a MySQL (__[mysqlnd](http://php.net/manual/en/book.mysqlnd.php) is required__) database, based on expressions passed from a client by a DevExtreme data source. The library will allow you to implement a data service that supports
 the protocol described in the following help topic: [Custom Data Sources](https://js.devexpress.com/Documentation/Guide/Data_Binding/Specify_a_Data_Source/Custom_Data_Sources/).
@@ -12,7 +11,6 @@ __NOTE__
 This library is for demonstrative purposes only. It illustrates how to use PHP to process client requests on the server. If the current functionality does not meet your needs, feel free to fork the repository and modify the source code according to your requirements.
 
 ## Getting Started
----
 
 If you wish to load data from a MySQL data table based on parameters received from the client side, perform the following steps.
 
@@ -21,7 +19,7 @@ If you wish to load data from a MySQL data table based on parameters received fr
 * Register the library autoloader by executing the following code:
 
 ```PHP
-spl_autoload_register(array("DevExtreme\LoadHelper", "LoadModule"));
+spl_autoload_register(['DevExtreme\LoadHelper', 'loadModule']);
 ```
 
 Since all classes in the library are wrapped in the DevExtreme namespace, use the [use](http://php.net/manual/en/language.namespaces.importing.php)
@@ -41,9 +39,9 @@ to the ```DbSet``` constructor.
 is a static method and you will not need to create an instance of the class. The following code snippet shows how to do this:
 
 ```PHP
-$mySQL = new mysqli("serverName", "userName", "password", "databaseName");
-$dbSet = new DbSet($mySQL, "tableName");
-$result = DataSourceLoader::Load($dbSet, $params);
+$mySQL = new mysqli('serverName', 'userName', 'password', 'databaseName');
+$dbSet = new DbSet($mySQL, 'tableName');
+$result = DataSourceLoader::load($dbSet, $params);
 ```
 Note that parameters (```$params```) must be passed as an associative [array](http://php.net/manual/en/language.types.array.php).
 
@@ -62,28 +60,27 @@ npm install
 
 
 ## Diving deeper
----
 
 The ```DbSet``` class has the following public methods that you can use without using the ```DataSourceLoader``` class.
-* ```Delete``` - deletes an item from a data table.
+* ```delete``` - deletes an item from a data table.
 It accepts a single parameter that represents a key. The key must be passed as an associative array. For example, if your key is ID and its value is 1, it should be passed to the method in the following manner:
 
 ```PHP
-$dbSet->Delete(array("ID" => 1));
+$dbSet->delete(['ID' => 1]);
 ```
 The method returns a number of the affected rows.
 
 
-* ```GetLastError``` - returns a string representation of the error that was thrown by the last executed SQL query.
+* ```getLastError``` - returns a string representation of the error that was thrown by the last executed SQL query.
 The method does not accept parameters.
 
 
-* ```Insert``` - insert a new row to your data table.
+* ```insert``` - insert a new row to your data table.
 It accepts a single parameter that represents an associative array of items.
 The method returns a number of the affected rows.
 
 
-* ```Update``` - updates a certain item in your data table that is identified by a key value.
+* ```update``` - updates a certain item in your data table that is identified by a key value.
 It accepts two parameters. The first parameter represents a key value. It should be specified in the same manner as a key value for the ```Delete``` method.
 The second parameter represents an associative array of values that corresponds to data fields you wish to update.
 The method returns a number of the affected rows.

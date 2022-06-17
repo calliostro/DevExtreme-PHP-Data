@@ -1,72 +1,71 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DevExtreme;
 
-use Exception;
+use mysqli;
 
-class DbSet
+final class DbSet
 {
-    private static $SELECT_OP = 'SELECT';
-    private static $FROM_OP = 'FROM';
-    private static $WHERE_OP = 'WHERE';
-    private static $ORDER_OP = 'ORDER BY';
-    private static $GROUP_OP = 'GROUP BY';
-    private static $ALL_FIELDS = '*';
-    private static $LIMIT_OP = 'LIMIT';
-    private static $INSERT_OP = 'INSERT INTO';
-    private static $VALUES_OP = 'VALUES';
-    private static $UPDATE_OP = 'UPDATE';
-    private static $SET_OP = 'SET';
-    private static $DELETE_OP = 'DELETE';
-    private static $MAX_ROW_INDEX = 2147483647;
-    private $dbTableName;
-    private $tableNameIndex = 0;
-    private $lastWrappedTableName;
-    private $resultQuery;
-    private $mySQL;
-    private $lastError;
-    private $groupSettings;
+    private const SELECT_OP = 'SELECT';
+    private const FROM_OP = 'FROM';
+    private const WHERE_OP = 'WHERE';
+    private const ORDER_OP = 'ORDER BY';
+    private const GROUP_OP = 'GROUP BY';
+    private const ALL_FIELDS = '*';
+    private const LIMIT_OP = 'LIMIT';
+    private const INSERT_OP = 'INSERT INTO';
+    private const VALUES_OP = 'VALUES';
+    private const UPDATE_OP = 'UPDATE';
+    private const SET_OP = 'SET';
+    private const DELETE_OP = 'DELETE';
+    private const MAX_ROW_INDEX = 2147483647;
 
-    public function __construct($mySQL, $table)
+    private string $dbTableName;
+    private int $tableNameIndex = 0;
+    private string $lastWrappedTableName;
+    private string $resultQuery;
+    private mysqli $mySQL;
+    private ?string $lastError = null;
+    private ?array $groupSettings = null;
+
+    public function __construct(mysqli $mySQL, string $table)
     {
-        if (!is_a($mySQL, '\mysqli') || !isset($table)) {
-            throw new Exception('Invalid params');
-        }
-
         $this->mySQL = $mySQL;
         $this->dbTableName = $table;
 
         $this->resultQuery = sprintf(
             '%s %s %s %s',
-            self::$SELECT_OP,
-            self::$ALL_FIELDS,
-            self::$FROM_OP,
+            self::SELECT_OP,
+            self::ALL_FIELDS,
+            self::FROM_OP,
             $this->dbTableName
         );
     }
 
-    public function getLastError()
+    public function getLastError(): ?string
     {
         return $this->lastError;
     }
 
-    private function _wrapQuery()
+    private function _wrapQuery(): void
     {
         $this->tableNameIndex++;
         $this->lastWrappedTableName = "{$this->dbTableName}_{$this->tableNameIndex}";
 
         $this->resultQuery = sprintf(
             '%s %s %s (%s) %s %s',
-            self::$SELECT_OP,
-            self::$ALL_FIELDS,
-            self::$FROM_OP,
+            self::SELECT_OP,
+            self::ALL_FIELDS,
+            self::FROM_OP,
             $this->resultQuery,
             AggregateHelper::AS_OP,
             $this->lastWrappedTableName
         );
     }
 
-    private function _prepareQueryForLastOperator($operator)
+    private function _prepareQueryForLastOperator(string $operator): void
     {
         $operator = trim($operator);
         $lastOperatorPos = strrpos($this->resultQuery, ' ' . $operator . ' ');
@@ -80,7 +79,7 @@ class DbSet
         }
     }
 
-    public function select($expression)
+    public function select(mixed $expression): self
     {
         Utils::escapeExpressionValues($this->mySQL, $expression);
 
@@ -89,9 +88,9 @@ class DbSet
         return $this;
     }
 
-    private function _selectImpl($expression, $needQuotes = true)
+    private function _selectImpl(mixed $expression = null, bool $needQuotes = true): void
     {
-        if (isset($expression)) {
+        if ($expression != null) {
             $fields = '';
 
             if (is_string($expression)) {
@@ -107,10 +106,10 @@ class DbSet
             }
 
             if (strlen($fields)) {
-                $allFieldOperatorPos = strpos($this->resultQuery, self::$ALL_FIELDS);
+                $allFieldOperatorPos = strpos($this->resultQuery, self::ALL_FIELDS);
 
                 if ($allFieldOperatorPos == 7) {
-                    $this->resultQuery = substr_replace($this->resultQuery, $fields, 7, strlen(self::$ALL_FIELDS));
+                    $this->resultQuery = substr_replace($this->resultQuery, $fields, 7, strlen(self::ALL_FIELDS));
                 } else {
                     $this->_wrapQuery();
                     $this->_selectImpl($expression);
@@ -119,19 +118,22 @@ class DbSet
         }
     }
 
-    public function filter($expression)
+    /**
+     * @throws \Exception
+     */
+    public function filter(mixed $expression = null): self
     {
         Utils::escapeExpressionValues($this->mySQL, $expression);
 
-        if (isset($expression) && is_array($expression)) {
+        if (is_array($expression)) {
             $result = FilterHelper::getSqlExprByArray($expression);
 
             if (strlen($result)) {
-                $this->_prepareQueryForLastOperator(self::$WHERE_OP);
+                $this->_prepareQueryForLastOperator(self::WHERE_OP);
 
                 $this->resultQuery .= sprintf(
                     ' %s %s',
-                    self::$WHERE_OP,
+                    self::WHERE_OP,
                     $result
                 );
             }
@@ -140,11 +142,11 @@ class DbSet
         return $this;
     }
 
-    public function sort($expression)
+    public function sort(mixed $expression = null): self
     {
         Utils::escapeExpressionValues($this->mySQL, $expression);
 
-        if (isset($expression)) {
+        if ($expression != null) {
             $result = '';
 
             if (is_string($expression)) {
@@ -157,11 +159,11 @@ class DbSet
             }
 
             if (strlen($result)) {
-                $this->_prepareQueryForLastOperator(self::$ORDER_OP);
+                $this->_prepareQueryForLastOperator(self::ORDER_OP);
 
                 $this->resultQuery .= sprintf(
                     ' %s %s',
-                    self::$ORDER_OP,
+                    self::ORDER_OP,
                     $result
                 );
             }
@@ -170,16 +172,16 @@ class DbSet
         return $this;
     }
 
-    public function skipTake($skip, $take)
+    public function skipTake(?int $skip, ?int $take): self
     {
-        $skip = (!isset($skip) || !is_int($skip) ? 0 : $skip);
-        $take = (!isset($take) || !is_int($take) ? self::$MAX_ROW_INDEX : $take);
+        $skip = (!is_int($skip) ? 0 : $skip);
+        $take = (!is_int($take) ? self::MAX_ROW_INDEX : $take);
 
         if ($skip != 0 || $take != 0) {
-            $this->_prepareQueryForLastOperator(self::$LIMIT_OP);
+            $this->_prepareQueryForLastOperator(self::LIMIT_OP);
             $this->resultQuery .= sprintf(
                 ' %s %0.0f, %0.0f',
-                self::$LIMIT_OP,
+                self::LIMIT_OP,
                 $skip,
                 $take
             );
@@ -188,7 +190,7 @@ class DbSet
         return $this;
     }
 
-    private function _createGroupCountQuery($firstGroupField, $skip = null, $take = null)
+    private function _createGroupCountQuery(string $firstGroupField, ?int $skip = null, ?int $take = null): void
     {
         $groupCount = $this->groupSettings['groupCount'];
         $lastGroupExpanded = $this->groupSettings['lastGroupExpanded'];
@@ -197,31 +199,31 @@ class DbSet
             if ($groupCount === 2) {
                 $this->groupSettings['groupItemCountQuery'] = sprintf(
                     '%s COUNT(1) %s (%s) AS %s_%d',
-                    self::$SELECT_OP,
-                    self::$FROM_OP,
+                    self::SELECT_OP,
+                    self::FROM_OP,
                     $this->resultQuery,
                     $this->dbTableName,
                     $this->tableNameIndex + 1
                 );
 
-                if (isset($skip) || isset($take)) {
+                if ($skip != null || $take != null) {
                     $this->skipTake($skip, $take);
                 }
             }
         } else {
             $groupQuery = sprintf(
                 '%s COUNT(1) %s %s %s %s',
-                self::$SELECT_OP,
-                self::$FROM_OP,
+                self::SELECT_OP,
+                self::FROM_OP,
                 $this->dbTableName,
-                self::$GROUP_OP,
+                self::GROUP_OP,
                 $firstGroupField
             );
 
             $this->groupSettings['groupItemCountQuery'] = sprintf(
                 '%s COUNT(1) %s (%s) AS %s_%d',
-                self::$SELECT_OP,
-                self::$FROM_OP,
+                self::SELECT_OP,
+                self::FROM_OP,
                 $groupQuery,
                 $this->dbTableName,
                 $this->tableNameIndex + 1
@@ -234,14 +236,14 @@ class DbSet
         }
     }
 
-    public function group($expression, $groupSummary = null, $skip = null, $take = null)
+    public function group(mixed $expression, ?array $groupSummary = null, ?int $skip = null, ?int $take = null): self
     {
         Utils::escapeExpressionValues($this->mySQL, $expression);
         Utils::escapeExpressionValues($this->mySQL, $groupSummary);
 
         $this->groupSettings = null;
 
-        if (isset($expression)) {
+        if ($expression != null) {
             $groupFields = '';
             $sortFields = '';
             $selectFields = '';
@@ -264,7 +266,7 @@ class DbSet
 
             if ($groupCount > 0) {
                 if (!$lastGroupExpanded) {
-                    $groupSummaryData = isset($groupSummary) && is_array(
+                    $groupSummaryData = is_array(
                         $groupSummary
                     ) ? AggregateHelper::getSummaryInfo($groupSummary) : null;
 
@@ -284,7 +286,7 @@ class DbSet
 
                     $this->resultQuery .= sprintf(
                         ' %s %s',
-                        self::$GROUP_OP,
+                        self::GROUP_OP,
                         $groupFields
                     );
 
@@ -296,7 +298,7 @@ class DbSet
 
                     $this->resultQuery .= sprintf(
                         ' %s %s',
-                        self::$ORDER_OP,
+                        self::ORDER_OP,
                         $sortFields
                     );
                 }
@@ -314,37 +316,38 @@ class DbSet
         return $this;
     }
 
-    public function getTotalSummary($expression, $filterExpression = null)
+    /**
+     * @throws \Exception
+     */
+    public function getTotalSummary(mixed $expression, string|array|null $filterExpression = null): ?array
     {
         Utils::escapeExpressionValues($this->mySQL, $expression);
         Utils::escapeExpressionValues($this->mySQL, $filterExpression);
 
         $result = null;
 
-        if (isset($expression) && is_array($expression)) {
+        if (is_array($expression)) {
             $summaryInfo = AggregateHelper::getSummaryInfo($expression);
             $fields = $summaryInfo['fields'];
 
             if (strlen($fields) > 0) {
                 $filter = '';
 
-                if (isset($filterExpression)) {
-                    if (is_string($filterExpression)) {
-                        $filter = trim($filterExpression);
-                    }
+                if (is_string($filterExpression)) {
+                    $filter = trim($filterExpression);
+                }
 
-                    if (is_array($filterExpression)) {
-                        $filter = FilterHelper::getSqlExprByArray($filterExpression);
-                    }
+                if (is_array($filterExpression)) {
+                    $filter = FilterHelper::getSqlExprByArray($filterExpression);
                 }
 
                 $totalSummaryQuery = sprintf(
                     '%s %s %s %s %s',
-                    self::$SELECT_OP,
+                    self::SELECT_OP,
                     $fields,
-                    self::$FROM_OP,
+                    self::FROM_OP,
                     $this->dbTableName,
-                    strlen($filter) > 0 ? self::$WHERE_OP . ' ' . $filter : $filter
+                    strlen($filter) > 0 ? self::WHERE_OP . ' ' . $filter : $filter
                 );
 
                 $this->lastError = null;
@@ -371,11 +374,11 @@ class DbSet
         return $result;
     }
 
-    public function getGroupCount()
+    public function getGroupCount(): int
     {
         $result = 0;
 
-        if ($this->mySQL && isset($this->groupSettings) && isset($this->groupSettings['groupItemCountQuery'])) {
+        if (isset($this->groupSettings) && isset($this->groupSettings['groupItemCountQuery'])) {
             $this->lastError = null;
             $queryResult = $this->mySQL->query($this->groupSettings['groupItemCountQuery']);
 
@@ -396,166 +399,155 @@ class DbSet
         return $result;
     }
 
-    public function getCount()
+    public function getCount(): int
     {
         $result = 0;
 
-        if ($this->mySQL) {
-            $countQuery = sprintf(
-                '%s %s(1) %s (%s) %s %s_%d',
-                self::$SELECT_OP,
-                AggregateHelper::COUNT_OP,
-                self::$FROM_OP,
-                $this->resultQuery,
-                AggregateHelper::AS_OP,
-                $this->dbTableName,
-                $this->tableNameIndex + 1
-            );
+        $countQuery = sprintf(
+            '%s %s(1) %s (%s) %s %s_%d',
+            self::SELECT_OP,
+            AggregateHelper::COUNT_OP,
+            self::FROM_OP,
+            $this->resultQuery,
+            AggregateHelper::AS_OP,
+            $this->dbTableName,
+            $this->tableNameIndex + 1
+        );
 
-            $this->lastError = null;
-            $queryResult = $this->mySQL->query($countQuery);
+        $this->lastError = null;
+        $queryResult = $this->mySQL->query($countQuery);
 
-            if (!$queryResult) {
-                $this->lastError = $this->mySQL->error;
-            } else {
-                if ($queryResult->num_rows > 0) {
-                    $row = $queryResult->fetch_array(MYSQLI_NUM);
-                    $result = Utils::stringToNumber($row[0]);
-                }
+        if (!$queryResult) {
+            $this->lastError = $this->mySQL->error;
+        } else {
+            if ($queryResult->num_rows > 0) {
+                $row = $queryResult->fetch_array(MYSQLI_NUM);
+                $result = Utils::stringToNumber($row[0]);
             }
+        }
 
-            if ($queryResult !== false) {
-                $queryResult->close();
-            }
+        if ($queryResult !== false) {
+            $queryResult->close();
         }
 
         return $result;
     }
 
-    public function asArray()
+    public function asArray(): ?array
     {
         $result = null;
 
-        if ($this->mySQL) {
-            $this->lastError = null;
-            $queryResult = $this->mySQL->query($this->resultQuery);
+        $this->lastError = null;
+        $queryResult = $this->mySQL->query($this->resultQuery);
 
-            if (!$queryResult) {
-                $this->lastError = $this->mySQL->error;
+        if (!$queryResult) {
+            $this->lastError = $this->mySQL->error;
+        } else {
+            if (isset($this->groupSettings)) {
+                $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $this->groupSettings);
             } else {
-                if (isset($this->groupSettings)) {
-                    $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $this->groupSettings);
-                } else {
-                    $result = $queryResult->fetch_all(MYSQLI_ASSOC);
-                }
-
-                $queryResult->close();
+                $result = $queryResult->fetch_all(MYSQLI_ASSOC);
             }
+
+            $queryResult->close();
         }
 
         return $result;
     }
 
-    public function insert($values)
+    public function insert(array $values): ?int
     {
         Utils::escapeExpressionValues($this->mySQL, $values);
 
         $result = null;
+        $fields = '';
+        $fieldValues = '';
 
-        if (isset($values) && is_array($values)) {
-            $fields = '';
-            $fieldValues = '';
-
-            foreach ($values as $prop => $value) {
-                $fields .= (strlen($fields) ? ', ' : '') . Utils::quoteStringValue($prop);
-                $fieldValues .= (strlen($fieldValues) ? ', ' : '') . Utils::quoteStringValue($value, false);
-            }
-
-            if (strlen($fields) > 0) {
-                $queryString = sprintf(
-                    '%s %s (%s) %s(%s)',
-                    self::$INSERT_OP,
-                    $this->dbTableName,
-                    $fields,
-                    self::$VALUES_OP,
-                    $fieldValues
-                );
-                $this->lastError = null;
-
-                if ($this->mySQL->query($queryString) == true) {
-                    $result = $this->mySQL->affected_rows;
-                } else {
-                    $this->lastError = $this->mySQL->error;
-                }
-            }
+        foreach ($values as $prop => $value) {
+            $fields .= (strlen($fields) ? ', ' : '') . Utils::quoteStringValue($prop);
+            $fieldValues .= (strlen($fieldValues) ? ', ' : '') . Utils::quoteStringValue($value, false);
         }
 
-        return $result;
-    }
-
-    public function update($key, $values)
-    {
-        Utils::escapeExpressionValues($this->mySQL, $key);
-        Utils::escapeExpressionValues($this->mySQL, $values);
-
-        $result = null;
-
-        if (isset($key) && is_array($key) && isset($values) && is_array($values)) {
-            $fields = '';
-
-            foreach ($values as $prop => $value) {
-                $templ = strlen($fields) == 0 ? '%s = %s' : ', %s = %s';
-                $fields .= sprintf(
-                    $templ,
-                    Utils::quoteStringValue($prop),
-                    Utils::quoteStringValue($value, false)
-                );
-            }
-
-            if (strlen($fields) > 0) {
-                $queryString = sprintf(
-                    '%s %s %s %s %s %s',
-                    self::$UPDATE_OP,
-                    $this->dbTableName,
-                    self::$SET_OP,
-                    $fields,
-                    self::$WHERE_OP,
-                    FilterHelper::getSqlExprByKey($key)
-                );
-                $this->lastError = null;
-
-                if ($this->mySQL->query($queryString) == true) {
-                    $result = $this->mySQL->affected_rows;
-                } else {
-                    $this->lastError = $this->mySQL->error;
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    public function delete($key)
-    {
-        Utils::escapeExpressionValues($this->mySQL, $key);
-        $result = null;
-
-        if (isset($key) && is_array($key)) {
+        if (strlen($fields) > 0) {
             $queryString = sprintf(
-                '%s %s %s %s %s',
-                self::$DELETE_OP,
-                self::$FROM_OP,
+                '%s %s (%s) %s(%s)',
+                self::INSERT_OP,
                 $this->dbTableName,
-                self::$WHERE_OP,
-                FilterHelper::getSqlExprByKey($key)
+                $fields,
+                self::VALUES_OP,
+                $fieldValues
             );
             $this->lastError = null;
 
-            if ($this->mySQL->query($queryString) == true) {
+            if ($this->mySQL->query($queryString)) {
                 $result = $this->mySQL->affected_rows;
             } else {
                 $this->lastError = $this->mySQL->error;
             }
+        }
+
+        return $result;
+    }
+
+    public function update(array $key, array $values): ?int
+    {
+        Utils::escapeExpressionValues($this->mySQL, $key);
+        Utils::escapeExpressionValues($this->mySQL, $values);
+
+        $result = null;
+        $fields = '';
+
+        foreach ($values as $prop => $value) {
+            $templ = strlen($fields) == 0 ? '%s = %s' : ', %s = %s';
+            $fields .= sprintf(
+                $templ,
+                Utils::quoteStringValue($prop),
+                Utils::quoteStringValue($value, false)
+            );
+        }
+
+        if (strlen($fields) > 0) {
+            $queryString = sprintf(
+                '%s %s %s %s %s %s',
+                self::UPDATE_OP,
+                $this->dbTableName,
+                self::SET_OP,
+                $fields,
+                self::WHERE_OP,
+                FilterHelper::getSqlExprByKey($key)
+            );
+            $this->lastError = null;
+
+            if ($this->mySQL->query($queryString)) {
+                $result = $this->mySQL->affected_rows;
+            } else {
+                $this->lastError = $this->mySQL->error;
+            }
+        }
+
+        return $result;
+    }
+
+    public function delete(array $key): ?int
+    {
+        Utils::escapeExpressionValues($this->mySQL, $key);
+
+        $result = null;
+
+        $queryString = sprintf(
+            '%s %s %s %s %s',
+            self::DELETE_OP,
+            self::FROM_OP,
+            $this->dbTableName,
+            self::WHERE_OP,
+            FilterHelper::getSqlExprByKey($key)
+        );
+        $this->lastError = null;
+
+        if ($this->mySQL->query($queryString)) {
+            $result = $this->mySQL->affected_rows;
+        } else {
+            $this->lastError = $this->mySQL->error;
         }
 
         return $result;

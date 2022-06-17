@@ -1,10 +1,12 @@
 <?php
 
-require_once('TestBase.php');
+declare(strict_types=1);
 
-class DbSetAPITest extends TestBase
+namespace DevExtreme\Tests;
+
+final class DbSetAPITest extends TestBase
 {
-    public function providerFilterAnd()
+    public function providerFilterAnd(): array
     {
         $filterExpression1 = [
             ['Category', '=', 'Dairy Products'],
@@ -70,7 +72,7 @@ class DbSetAPITest extends TestBase
         ];
     }
 
-    public function providerSort()
+    public function providerSort(): array
     {
         $field = 'Name';
         $sortExpression1 = [$field];
@@ -94,7 +96,7 @@ class DbSetAPITest extends TestBase
         ];
     }
 
-    public function providerGroup()
+    public function providerGroup(): array
     {
         $field = 'Category';
         $groupCount = 4;
@@ -120,7 +122,7 @@ class DbSetAPITest extends TestBase
         ];
     }
 
-    private function groupSummariesEqual($data, $standard)
+    private function groupSummariesEqual(array $data, array $standard): bool
     {
         $dataCount = count($data);
         $standardCount = count($standard);
@@ -153,7 +155,7 @@ class DbSetAPITest extends TestBase
         return $result;
     }
 
-    public function providerGroupSummary()
+    public function providerGroupSummary(): array
     {
         $group = [
             (object)[
@@ -228,7 +230,7 @@ class DbSetAPITest extends TestBase
         ];
     }
 
-    public function providerGetTotalSummary()
+    public function providerGetTotalSummary(): array
     {
         $summaryExpression1 = [
             (object)[
@@ -269,7 +271,7 @@ class DbSetAPITest extends TestBase
         ];
     }
 
-    public function providerEscapeExpressionValues()
+    public function providerEscapeExpressionValues(): array
     {
         $filterExpression1 = ['Name', '=', "N'o\"r\d-Ost Mat%123_jes)hering#"];
         $filterExpression2 = ['Name', 'contains', '%123_jes)'];
@@ -280,12 +282,12 @@ class DbSetAPITest extends TestBase
         ];
     }
 
-    public function testGetCount()
+    public function testGetCount(): void
     {
         $this->assertEquals(31, $this->dbSet->getCount());
     }
 
-    public function testSelect()
+    public function testSelect(): void
     {
         $columns = ['BDate', 'Category', 'CustomerName'];
         $this->dbSet->select($columns);
@@ -296,8 +298,9 @@ class DbSetAPITest extends TestBase
 
     /**
      * @dataProvider providerFilterAnd
+     * @throws \Exception
      */
-    public function testFilterAnd($filterExpression, $values)
+    public function testFilterAnd(array $filterExpression, array $values): void
     {
         $this->dbSet->filter($filterExpression);
         $data = $this->dbSet->asArray();
@@ -305,7 +308,10 @@ class DbSetAPITest extends TestBase
         $this->assertEquals($values, $result);
     }
 
-    public function testFilterOr()
+    /**
+     * @throws \Exception
+     */
+    public function testFilterOr(): void
     {
         $filterExpression = [
             ['ID', '=', 10],
@@ -325,7 +331,10 @@ class DbSetAPITest extends TestBase
         $this->assertEquals($values, $result);
     }
 
-    public function testFilterNotNull()
+    /**
+     * @throws \Exception
+     */
+    public function testFilterNotNull(): void
     {
         $filterExpression = [
             ['CustomerName', '<>', null],
@@ -339,7 +348,7 @@ class DbSetAPITest extends TestBase
     /**
      * @dataProvider providerSort
      */
-    public function testSort($sortExpression, $currentValue, $desc, $field)
+    public function testSort(array $sortExpression, string $currentValue, bool $desc, string $field): void
     {
         $sorted = true;
         $this->dbSet->sort($sortExpression);
@@ -360,7 +369,7 @@ class DbSetAPITest extends TestBase
         $this->assertTrue($sorted && $dataItemsCount > 0);
     }
 
-    public function testSkipTake()
+    public function testSkipTake(): void
     {
         $this->dbSet->skipTake(10, 5);
         $data = $this->dbSet->asArray();
@@ -373,8 +382,13 @@ class DbSetAPITest extends TestBase
     /**
      * @dataProvider providerGroup
      */
-    public function testGroup($groupExpression, $currentValue, $desc, $field, $groupCount)
-    {
+    public function testGroup(
+        array $groupExpression,
+        string $currentValue,
+        bool $desc,
+        string $field,
+        int $groupCount
+    ): void {
         $grouped = true;
         $this->dbSet->group($groupExpression);
         $data = $this->dbSet->asArray();
@@ -397,7 +411,7 @@ class DbSetAPITest extends TestBase
     /**
      * @dataProvider providerGroupSummary
      */
-    public function testGroupSummary($group, $groupSummary, $standard)
+    public function testGroupSummary(array $group, array $groupSummary, array $standard): void
     {
         $this->dbSet->group($group, $groupSummary);
         $data = $this->dbSet->asArray();
@@ -407,15 +421,16 @@ class DbSetAPITest extends TestBase
 
     /**
      * @dataProvider providerGetTotalSummary
+     * @throws \Exception
      */
-    public function testGetTotalSummary($summaryExpression, $value)
+    public function testGetTotalSummary(array $summaryExpression, int $value): void
     {
         $data = $this->dbSet->getTotalSummary($summaryExpression);
         $result = count($data) > 0 ? $data[0] : 0;
         $this->assertEquals($value, $result);
     }
 
-    public function testGetGroupCount()
+    public function testGetGroupCount(): void
     {
         $groupExpression = [
             (object)[
@@ -426,13 +441,14 @@ class DbSetAPITest extends TestBase
         ];
         $this->dbSet->group($groupExpression);
         $groupCount = $this->dbSet->getGroupCount();
-        $this->assertEquals($groupCount, 4);
+        $this->assertEquals(4, $groupCount);
     }
 
     /**
      * @dataProvider providerEscapeExpressionValues
+     * @throws \Exception
      */
-    public function testEscapeExpressionValues($filterExpression, $value)
+    public function testEscapeExpressionValues(array $filterExpression, int $value): void
     {
         $data = $this->dbSet->select('ID')->filter($filterExpression)->asArray();
         $result = false;

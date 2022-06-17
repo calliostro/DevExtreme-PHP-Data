@@ -1,17 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DevExtreme;
 
-use Exception;
-
-class DataSourceLoader
+final class DataSourceLoader
 {
-    public static function load($dbSet, $params)
+    /**
+     * @throws \Exception
+     */
+    public static function load(DbSet $dbSet, array $params): ?array
     {
-        if (!isset($dbSet) || get_class($dbSet) != 'DevExtreme\DbSet' || !isset($params) || !is_array($params)) {
-            throw new Exception('Invalid params');
-        }
-
         $dbSet->select(Utils::getItemValueOrDefault($params, 'select'))
             ->filter(Utils::getItemValueOrDefault($params, 'filter'));
 

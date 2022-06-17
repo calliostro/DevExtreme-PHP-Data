@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DevExtreme;
 
-class LoadHelper
+final class LoadHelper
 {
-    public static function loadModule($className)
+    public static function loadModule(string $className): void
     {
         $namespaceNamePos = strpos($className, __NAMESPACE__);
 

@@ -1,0 +1,26 @@
+{
+  "name": "calliostro/dev-extreme-php-data-example",
+  "type": "project",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "DevExtreme\\Example\\": "php/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Developer Express Inc.",
+      "email": "info@devexpress.com"
+    },
+    {
+      "name": "calliostro",
+      "email": "calliostro@gmail.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": "^8.0",
+    "doctrine/orm": "^2.12",
+    "ext-mysqli": "*"
+  }
+}

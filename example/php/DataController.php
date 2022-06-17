@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 require_once('../../DevExtreme/LoadHelper.php');
 spl_autoload_register(['DevExtreme\LoadHelper', 'loadModule']);
 
 use DevExtreme\DbSet;
 use DevExtreme\DataSourceLoader;
 
-class DataController
+final class DataController
 {
-    private $dbSet;
+    private DbSet $dbSet;
 
     public function __construct()
     {
@@ -17,7 +19,10 @@ class DataController
         $this->dbSet = new DbSet($mySQL, 'tableName');
     }
 
-    public function fillDbIfEmpty()
+    /**
+     * @throws \Exception
+     */
+    public function fillDbIfEmpty(): void
     {
         if ($this->dbSet->getCount() == 0) {
             $curDateString = '2013-1-1';
@@ -38,31 +43,37 @@ class DataController
         }
     }
 
-    public function get($params)
+    /**
+     * @throws \Exception
+     */
+    public function get(array $params): array|string|null
     {
         $result = DataSourceLoader::load($this->dbSet, $params);
 
-        if (!isset($result)) {
+        if ($result == null) {
             $result = $this->dbSet->getLastError();
         }
 
         return $result;
     }
 
-    public function post($values)
+    public function post(array $values): int|string|null
     {
         $result = $this->dbSet->insert($values);
 
-        if (!isset($result)) {
+        if ($result == null) {
             $result = $this->dbSet->getLastError();
         }
 
         return $result;
     }
 
-    public function put($key, $values)
+    /**
+     * @throws \Exception
+     */
+    public function put(mixed $key, ?array $values): int|string|null
     {
-        if (!isset($key) || (isset($values) && !is_array($values))) {
+        if ($values != null && !is_array($values)) {
             throw new Exception('Invalid params');
         }
 
@@ -81,9 +92,12 @@ class DataController
         return $result;
     }
 
-    public function delete($key)
+    /**
+     * @throws \Exception
+     */
+    public function delete(mixed $key): int|string|null
     {
-        if (!isset($key)) {
+        if ($key == null) {
             throw new Exception('Invalid params');
         }
 

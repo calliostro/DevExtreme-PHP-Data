@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+namespace DevExtreme\Tests;
+
 use DevExtreme\AggregateHelper;
 
-require_once('TestBase.php');
-
-class AggregateHelperTest extends TestBase
+final class AggregateHelperTest extends TestBase
 {
-    public function providerGroupSelectors()
+    public function providerGroupSelectors(): array
     {
         return [
             [[], true],
@@ -54,7 +56,7 @@ class AggregateHelperTest extends TestBase
         ];
     }
 
-    public function testGetFieldSetBySelectors()
+    public function testGetFieldSetBySelectors(): void
     {
         $params = [
             'field1',
@@ -95,7 +97,7 @@ class AggregateHelperTest extends TestBase
         $this->assertEquals($selectFields, $fieldSet['select']);
     }
 
-    public function testGetGroupedDataFromQuery_lastGroupExpanded()
+    public function testGetGroupedDataFromQuery_lastGroupExpanded(): void
     {
         $groupSettings = [
             'groupCount' => 2,
@@ -131,7 +133,7 @@ class AggregateHelperTest extends TestBase
         $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $groupSettings);
         $queryResult->close();
 
-        $this->assertEquals(count($expectedResult), count($result));
+        $this->assertSameSize($expectedResult, $result);
 
         $checked = true;
         for ($i = 0; $i < count($expectedResult); $i++) {
@@ -163,7 +165,7 @@ class AggregateHelperTest extends TestBase
         $this->assertTrue($checked);
     }
 
-    public function testGetGroupedDataFromQuery_summaryType()
+    public function testGetGroupedDataFromQuery_summaryType(): void
     {
         $groupSettings = [
             'groupCount' => 3,
@@ -204,7 +206,7 @@ class AggregateHelperTest extends TestBase
         $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $groupSettings);
         $queryResult->close();
 
-        $this->assertEquals(count($expectedResult), count($result));
+        $this->assertSameSize($expectedResult, $result);
 
         $checked = true;
 
@@ -250,14 +252,14 @@ class AggregateHelperTest extends TestBase
     /**
      * @dataProvider providerGroupSelectors
      */
-    public function testIsLastGroupExpanded($selectors, $expectedResult)
+    public function testIsLastGroupExpanded(array $selectors, bool $expectedResult): void
     {
         $result = AggregateHelper::isLastGroupExpanded($selectors);
 
         $this->assertTrue($expectedResult === $result);
     }
 
-    public function testGetSummaryInfo()
+    public function testGetSummaryInfo(): void
     {
         $selectors = [
             (object)[
@@ -278,7 +280,7 @@ class AggregateHelperTest extends TestBase
         $result = AggregateHelper::getSummaryInfo($selectors);
 
         $this->assertEquals($expectedResult['fields'], $result['fields']);
-        $this->assertEquals(count($expectedResult['summaryTypes']), count($result['summaryTypes']));
+        $this->assertSameSize($expectedResult['summaryTypes'], $result['summaryTypes']);
         $this->assertEquals($expectedResult['summaryTypes'][0], $result['summaryTypes'][0]);
         $this->assertEquals($expectedResult['summaryTypes'][1], $result['summaryTypes'][1]);
     }

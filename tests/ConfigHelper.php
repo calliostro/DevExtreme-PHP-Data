@@ -1,8 +1,12 @@
 <?php
 
-class ConfigHelper
+declare(strict_types=1);
+
+namespace DevExtreme\Tests;
+
+final class ConfigHelper
 {
-    public static function getConfiguration()
+    public static function getConfiguration(): ?array
     {
         $configFileName = getenv('TEST_CONF');
 

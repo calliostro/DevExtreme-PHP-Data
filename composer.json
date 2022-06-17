@@ -1,0 +1,35 @@
+{
+  "name": "calliostro/dev-extreme-php-data",
+  "description": "src/DevExtreme data layer extension for PHP 8 with Doctrine",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "DevExtreme\\": "DevExtreme/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "DevExtreme\\Tests\\": "tests/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Developer Express Inc.",
+      "email": "info@devexpress.com"
+    },
+    {
+      "name": "calliostro",
+      "email": "calliostro@gmail.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": "^8.0",
+    "doctrine/orm": "^2.0",
+    "ext-mysqli": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "9.5"
+  }
+}

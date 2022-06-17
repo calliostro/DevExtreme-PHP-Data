@@ -4,15 +4,18 @@ namespace DevExtreme;
 
 use Exception;
 
-class FilterHelper
+final class FilterHelper
 {
-    private static $AND_OP = 'AND';
-    private static $OR_OP = 'OR';
-    private static $LIKE_OP = 'LIKE';
-    private static $NOT_OP = 'NOT';
-    private static $IS_OP = 'IS';
+    private const AND_OP = 'AND';
+    private const OR_OP = 'OR';
+    private const LIKE_OP = 'LIKE';
+    private const NOT_OP = 'NOT';
+    private const IS_OP = 'IS';
 
-    private static function _getSqlFieldName($field)
+    /**
+     * @throws \Exception
+     */
+    private static function _getSqlFieldName($field): string
     {
         $fieldParts = explode('.', $field);
         $fieldName = Utils::quoteStringValue(trim($fieldParts[0]));
@@ -43,7 +46,10 @@ class FilterHelper
         return sprintf($fieldPattern, $sqlDateFunction, $fieldName);
     }
 
-    private static function _getSimpleSqlExpr($expression)
+    /**
+     * @throws \Exception
+     */
+    private static function _getSimpleSqlExpr($expression): string
     {
         $result = '';
         $itemsCount = count($expression);
@@ -65,11 +71,11 @@ class FilterHelper
 
                 switch ($clause) {
                     case '=':
-                        $clause = self::$IS_OP;
+                        $clause = self::IS_OP;
                         break;
 
                     case '<>':
-                        $clause = self::$IS_OP . ' ' . self::$NOT_OP;
+                        $clause = self::IS_OP . ' ' . self::NOT_OP;
                         break;
                 }
             } else {
@@ -86,26 +92,26 @@ class FilterHelper
 
                     case 'startswith':
                         $pattern = "%s %s '%s%%'";
-                        $clause = self::$LIKE_OP;
+                        $clause = self::LIKE_OP;
                         $val = addcslashes($val, '%_');
                         break;
 
                     case 'endswith':
                         $pattern = "%s %s '%%%s'";
                         $val = addcslashes($val, '%_');
-                        $clause = self::$LIKE_OP;
+                        $clause = self::LIKE_OP;
                         break;
 
                     case 'contains':
                         $pattern = "%s %s '%%%s%%'";
                         $val = addcslashes($val, '%_');
-                        $clause = self::$LIKE_OP;
+                        $clause = self::LIKE_OP;
                         break;
 
                     case 'notcontains':
                         $pattern = "%s %s '%%%s%%'";
                         $val = addcslashes($val, '%_');
-                        $clause = sprintf('%s %s', self::$NOT_OP, self::$LIKE_OP);
+                        $clause = sprintf('%s %s', self::NOT_OP, self::LIKE_OP);
                         break;
 
                     default:
@@ -119,7 +125,10 @@ class FilterHelper
         return $result;
     }
 
-    public static function getSqlExprByArray($expression)
+    /**
+     * @throws \Exception
+     */
+    public static function getSqlExprByArray(array $expression): string
     {
         $result = '(';
         $prevItemWasArray = false;
@@ -130,20 +139,18 @@ class FilterHelper
 
                 if ($index == 0) {
                     if ($item == '!') {
-                        $result .= sprintf('%s ', self::$NOT_OP);
+                        $result .= sprintf('%s ', self::NOT_OP);
                         continue;
                     }
 
-                    $result .= (isset($expression) && is_array($expression)) ? self::_getSimpleSqlExpr(
-                        $expression
-                    ) : '';
+                    $result .= self::_getSimpleSqlExpr($expression);
 
                     break;
                 }
 
                 $strItem = strtoupper(trim($item));
 
-                if ($strItem == self::$AND_OP || $strItem == self::$OR_OP) {
+                if ($strItem == self::AND_OP || $strItem == self::OR_OP) {
                     $result .= sprintf(' %s ', $strItem);
                 }
 
@@ -152,7 +159,7 @@ class FilterHelper
 
             if (is_array($item)) {
                 if ($prevItemWasArray) {
-                    $result .= sprintf(' %s ', self::$AND_OP);
+                    $result .= sprintf(' %s ', self::AND_OP);
                 }
 
                 $result .= self::getSqlExprByArray($item);
@@ -165,14 +172,14 @@ class FilterHelper
         return $result;
     }
 
-    public static function getSqlExprByKey($key)
+    public static function getSqlExprByKey(array $key): string
     {
         $result = '';
 
         foreach ($key as $prop => $value) {
             $templ = strlen($result) == 0 ?
                 '%s = %s' :
-                ' ' . self::$AND_OP . ' %s = %s';
+                ' ' . self::AND_OP . ' %s = %s';
 
             $result .= sprintf(
                 $templ,

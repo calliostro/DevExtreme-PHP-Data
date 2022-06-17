@@ -1,19 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
+namespace DevExtreme\Tests;
+
 use DevExtreme\DbSet;
+use mysqli;
+use PHPUnit\Framework\TestCase;
 
 require_once('ConfigHelper.php');
-if (!class_exists('\PHPUnit_Framework_TestCase')) {
-    class_alias('\PHPUnit\Framework\TestCase', '\PHPUnit_Framework_TestCase');
-}
 
-class TestBase extends PHPUnit_Framework_TestCase
+class TestBase extends TestCase
 {
-    protected static $mySQL;
-    protected static $tableName;
-    protected $dbSet;
+    protected static mysqli $mySQL;
+    protected static string $tableName;
+    protected DbSet $dbSet;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         $dbConfig = ConfigHelper::getConfiguration();
         self::$tableName = $dbConfig['tableName'];
@@ -25,12 +28,12 @@ class TestBase extends PHPUnit_Framework_TestCase
         );
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         self::$mySQL->close();
     }
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->dbSet = new DbSet(self::$mySQL, self::$tableName);
     }

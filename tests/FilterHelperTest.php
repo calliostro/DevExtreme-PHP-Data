@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+namespace DevExtreme\Tests;
+
 use DevExtreme\FilterHelper;
 
-class FilterHelperTest extends PHPUnit_Framework_TestCase
+final class FilterHelperTest extends TestBase
 {
-    public function providerFilterExpression()
+    public function providerFilterExpression(): array
     {
         return [
             [
@@ -68,7 +72,7 @@ class FilterHelperTest extends PHPUnit_Framework_TestCase
         ];
     }
 
-    public function providerKey()
+    public function providerKey(): array
     {
         return [
             [
@@ -87,8 +91,9 @@ class FilterHelperTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider providerFilterExpression
+     * @throws \Exception
      */
-    public function testGetSqlExprByArray($expression, $expectedResult)
+    public function testGetSqlExprByArray(array $expression, string $expectedResult): void
     {
         $result = FilterHelper::getSqlExprByArray($expression);
 
@@ -98,7 +103,7 @@ class FilterHelperTest extends PHPUnit_Framework_TestCase
     /**
      * @dataProvider providerKey
      */
-    public function testGetSqlExprByKey($key, $expectedResult)
+    public function testGetSqlExprByKey(array $key, string $expectedResult): void
     {
         $result = FilterHelper::getSqlExprByKey($key);
 

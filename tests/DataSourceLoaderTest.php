@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+namespace DevExtreme\Tests;
+
 use DevExtreme\DataSourceLoader;
 
-require_once('TestBase.php');
-
-class DataSourceLoaderTest extends TestBase
+final class DataSourceLoaderTest extends TestBase
 {
-    public function providerSort()
+    public function providerSort(): array
     {
         return [
             [['Name'], '', false, 'Name'],
@@ -35,7 +37,7 @@ class DataSourceLoaderTest extends TestBase
         ];
     }
 
-    public function providerFilter()
+    public function providerFilter(): array
     {
         return [
             [
@@ -97,7 +99,7 @@ class DataSourceLoaderTest extends TestBase
         ];
     }
 
-    public function providerGroup()
+    public function providerGroup(): array
     {
         return [
             [['Category'], '', false, 'key', 4, [10, 9, 4, 8]],
@@ -146,7 +148,7 @@ class DataSourceLoaderTest extends TestBase
         ];
     }
 
-    public function providerGroupPaging()
+    public function providerGroupPaging(): array
     {
         $groupExpression1 = [
             (object)[
@@ -182,7 +184,7 @@ class DataSourceLoaderTest extends TestBase
         ];
     }
 
-    public function providerTotalSummary()
+    public function providerTotalSummary(): array
     {
         $summaryExpression1 = [
             (object)[
@@ -223,7 +225,10 @@ class DataSourceLoaderTest extends TestBase
         ];
     }
 
-    public function testLoaderSelect()
+    /**
+     * @throws \Exception
+     */
+    public function testLoaderSelect(): void
     {
         $columns = ['BDate', 'Category', 'CustomerName'];
         $params = [
@@ -236,7 +241,10 @@ class DataSourceLoaderTest extends TestBase
         $this->assertEquals($columns, $result);
     }
 
-    public function testLoaderTotalCount()
+    /**
+     * @throws \Exception
+     */
+    public function testLoaderTotalCount(): void
     {
         $params = [
             'requireTotalCount' => true,
@@ -250,8 +258,9 @@ class DataSourceLoaderTest extends TestBase
 
     /**
      * @dataProvider providerSort
+     * @throws \Exception
      */
-    public function testLoaderSort($sortExpression, $currentValue, $desc, $field)
+    public function testLoaderSort(array $sortExpression, string $currentValue, bool $desc, string $field): void
     {
         $sorted = true;
         $params = [
@@ -275,7 +284,10 @@ class DataSourceLoaderTest extends TestBase
         $this->assertTrue($sorted && $dataItemsCount == 31);
     }
 
-    public function testLoaderSkipTake()
+    /**
+     * @throws \Exception
+     */
+    public function testLoaderSkipTake(): void
     {
         $params = [
             'skip' => 5,
@@ -303,8 +315,9 @@ class DataSourceLoaderTest extends TestBase
 
     /**
      * @dataProvider providerFilter
+     * @throws \Exception
      */
-    public function testLoaderFilter($expression, $ids)
+    public function testLoaderFilter(array $expression, array $ids): void
     {
         $params = [
             'filter' => $expression,
@@ -330,9 +343,16 @@ class DataSourceLoaderTest extends TestBase
 
     /**
      * @dataProvider providerGroup
+     * @throws \Exception
      */
-    public function testLoaderGroup($groupExpression, $currentValue, $desc, $field, $groupCount, $itemsInGroups)
-    {
+    public function testLoaderGroup(
+        array $groupExpression,
+        string $currentValue,
+        bool $desc,
+        string $field,
+        int $groupCount,
+        array $itemsInGroups
+    ): void {
         $grouped = true;
         $params = [
             'group' => $groupExpression,
@@ -360,8 +380,9 @@ class DataSourceLoaderTest extends TestBase
 
     /**
      * @dataProvider providerGroupPaging
+     * @throws \Exception
      */
-    public function testLoaderGroupPaging($params, $resultGroupItems)
+    public function testLoaderGroupPaging(array $params, array $resultGroupItems): void
     {
         $data = DataSourceLoader::load($this->dbSet, $params);
         $isPaginated = false;
@@ -388,8 +409,9 @@ class DataSourceLoaderTest extends TestBase
 
     /**
      * @dataProvider providerTotalSummary
+     * @throws \Exception
      */
-    public function testLoaderTotalSummary($summaryExpression, $value)
+    public function testLoaderTotalSummary(array $summaryExpression, int $value): void
     {
         $params = [
             'totalSummary' => $summaryExpression,

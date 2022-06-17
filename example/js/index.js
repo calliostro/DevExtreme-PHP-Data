@@ -1,5 +1,5 @@
 ﻿$(function() {
-    var url = "http://localhost/php/service.php";
+    var url = "http://localhost:8000/php/service.php";
     var db = DevExpress.data.AspNet.createStore({
         key: "ID",
         loadUrl: url,

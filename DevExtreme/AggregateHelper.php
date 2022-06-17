@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DevExtreme;
 
-class AggregateHelper
+use mysqli_result;
+
+final class AggregateHelper
 {
     const MIN_OP = 'MIN';
     const MAX_OP = 'MAX';
@@ -12,7 +16,7 @@ class AggregateHelper
     const AS_OP = 'AS';
     const GENERATED_FIELD_PREFIX = 'dx_';
 
-    private static function _recalculateGroupCountAndSummary(&$dataItem, $groupInfo)
+    private static function _recalculateGroupCountAndSummary(array &$dataItem, array $groupInfo): void
     {
         if ($groupInfo['groupIndex'] <= $groupInfo['groupCount'] - 3) {
             $items = $dataItem['items'];
@@ -71,7 +75,7 @@ class AggregateHelper
         }
     }
 
-    private static function _getNewDataItem($row, $groupInfo)
+    private static function _getNewDataItem(array $row, array $groupInfo): array
     {
         $dataItem = [];
         $dataFieldCount = count($groupInfo['dataFieldNames']);
@@ -83,7 +87,7 @@ class AggregateHelper
         return $dataItem;
     }
 
-    private static function _getNewGroupItem($row, $groupInfo)
+    private static function _getNewGroupItem(array $row, array $groupInfo): array
     {
         $groupIndexOffset = $groupInfo['lastGroupExpanded'] ? 1 : 2;
         $groupItem = [];
@@ -113,11 +117,11 @@ class AggregateHelper
         return $groupItem;
     }
 
-    private static function _groupData($row, &$resultItems, $groupInfo)
+    private static function _groupData(?array $row, array &$resultItems, array $groupInfo): void
     {
         $itemsCount = count($resultItems);
 
-        if (!isset($row) && !$itemsCount) {
+        if ($row == null && !$itemsCount) {
             return;
         }
 
@@ -161,7 +165,7 @@ class AggregateHelper
         }
     }
 
-    public static function getGroupedDataFromQuery($queryResult, $groupSettings)
+    public static function getGroupedDataFromQuery(mysqli_result $queryResult, array $groupSettings): array
     {
         $result = [];
         $groupSummaryTypes = null;
@@ -213,7 +217,7 @@ class AggregateHelper
         return $result;
     }
 
-    public static function isLastGroupExpanded($items)
+    public static function isLastGroupExpanded(array $items): bool
     {
         $result = true;
         $itemsCount = count($items);
@@ -222,16 +226,14 @@ class AggregateHelper
             $lastItem = $items[$itemsCount - 1];
 
             if (gettype($lastItem) === 'object') {
-                $result = isset($lastItem->isExpanded) ? $lastItem->isExpanded === true : true;
-            } else {
-                $result = true;
+                $result = !isset($lastItem->isExpanded) || $lastItem->isExpanded === true;
             }
         }
 
         return $result;
     }
 
-    public static function getFieldSetBySelectors($items)
+    public static function getFieldSetBySelectors(array $items): array
     {
         $group = '';
         $sort = '';
@@ -248,7 +250,7 @@ class AggregateHelper
             } else {
                 if (gettype($item) === 'object' && isset($item->selector)) {
                     $quoteSelector = Utils::quoteStringValue($item->selector);
-                    $desc = isset($item->desc) ? $item->desc : false;
+                    $desc = $item->desc ?? false;
 
                     if (isset($item->groupInterval)) {
                         if (is_int($item->groupInterval)) {
@@ -303,12 +305,12 @@ class AggregateHelper
         ];
     }
 
-    private static function _isSummaryTypeValid($summaryType)
+    private static function _isSummaryTypeValid(string $summaryType): bool
     {
         return in_array($summaryType, [self::MIN_OP, self::MAX_OP, self::AVG_OP, self::COUNT_OP, self::SUM_OP]);
     }
 
-    public static function getSummaryInfo($expression)
+    public static function getSummaryInfo(array $expression): array
     {
         $result = [];
         $fields = '';

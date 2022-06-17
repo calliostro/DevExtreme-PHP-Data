@@ -1,12 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
+namespace DevExtreme\Tests;
+
 use DevExtreme\Utils;
 
 require_once('TestBase.php');
 
 class UtilsTest extends TestBase
 {
-    public function providerValue()
+    public function providerValue(): array
     {
         return [
             [1, false, "'1'"],
@@ -22,7 +26,7 @@ class UtilsTest extends TestBase
         ];
     }
 
-    public function providerItemValue()
+    public function providerItemValue(): array
     {
         return [
             [
