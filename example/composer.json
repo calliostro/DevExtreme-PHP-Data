@@ -20,7 +20,6 @@
   "minimum-stability": "stable",
   "require": {
     "php": "^8.0",
-    "doctrine/orm": "^2.12",
     "ext-mysqli": "*"
   }
 }
