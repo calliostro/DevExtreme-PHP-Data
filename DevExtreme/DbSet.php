@@ -70,10 +70,10 @@ final class DbSet
         $operator = trim($operator);
         $lastOperatorPos = strrpos($this->resultQuery, ' ' . $operator . ' ');
 
-        if ($lastOperatorPos !== false) {
+        if (false !== $lastOperatorPos) {
             $lastBracketPos = strrpos($this->resultQuery, ')');
 
-            if (($lastBracketPos !== false && $lastOperatorPos > $lastBracketPos) || ($lastBracketPos === false)) {
+            if (((false !== $lastBracketPos) && ($lastOperatorPos > $lastBracketPos)) || (false === $lastBracketPos)) {
                 $this->_wrapQuery();
             }
         }
@@ -81,7 +81,7 @@ final class DbSet
 
     public function select(mixed $expression): self
     {
-        Utils::escapeExpressionValues($this->pdo, $expression);
+        Utils::escapeExpressionValues($expression);
 
         $this->_selectImpl($expression);
 
@@ -90,7 +90,7 @@ final class DbSet
 
     private function _selectImpl(mixed $expression = null, bool $needQuotes = true): void
     {
-        if ($expression != null) {
+        if (null !== $expression) {
             $fields = '';
 
             if (is_string($expression)) {
@@ -123,7 +123,7 @@ final class DbSet
      */
     public function filter(mixed $expression = null): self
     {
-        Utils::escapeExpressionValues($this->pdo, $expression);
+        Utils::escapeExpressionValues($expression);
 
         if (is_array($expression)) {
             $result = FilterHelper::getSqlExprByArray($expression);
@@ -144,9 +144,9 @@ final class DbSet
 
     public function sort(mixed $expression = null): self
     {
-        Utils::escapeExpressionValues($this->pdo, $expression);
+        Utils::escapeExpressionValues($expression);
 
-        if ($expression != null) {
+        if (null !== $expression) {
             $result = '';
 
             if (is_string($expression)) {
@@ -196,24 +196,27 @@ final class DbSet
         $lastGroupExpanded = $this->groupSettings['lastGroupExpanded'];
 
         if (!$lastGroupExpanded) {
-            if ($groupCount === 2) {
+            if (2 === $groupCount) {
                 $this->groupSettings['groupItemCountQuery'] = sprintf(
-                    '%s COUNT(1) %s (%s) AS %s_%d',
+                    '%s %s(1) %s (%s) %s %s_%d',
                     self::SELECT_OP,
+                    AggregateHelper::COUNT_OP,
                     self::FROM_OP,
                     $this->resultQuery,
+                    AggregateHelper::AS_OP,
                     $this->dbTableName,
                     $this->tableNameIndex + 1
                 );
 
-                if ($skip != null || $take != null) {
+                if ((null !== $skip) || (null !== $take)) {
                     $this->skipTake($skip, $take);
                 }
             }
         } else {
             $groupQuery = sprintf(
-                '%s COUNT(1) %s %s %s %s',
+                '%s %s(1) %s %s %s %s',
                 self::SELECT_OP,
+                AggregateHelper::COUNT_OP,
                 self::FROM_OP,
                 $this->dbTableName,
                 self::GROUP_OP,
@@ -221,29 +224,31 @@ final class DbSet
             );
 
             $this->groupSettings['groupItemCountQuery'] = sprintf(
-                '%s COUNT(1) %s (%s) AS %s_%d',
+                '%s %s(1) %s (%s) %s %s_%d',
                 self::SELECT_OP,
+                AggregateHelper::COUNT_OP,
                 self::FROM_OP,
                 $groupQuery,
+                AggregateHelper::AS_OP,
                 $this->dbTableName,
                 $this->tableNameIndex + 1
             );
 
-            if (isset($skip) || isset($take)) {
-                $this->groupSettings['skip'] = isset($skip) ? Utils::stringToNumber($skip) : 0;
-                $this->groupSettings['take'] = isset($take) ? Utils::stringToNumber($take) : 0;
+            if ((null !== $skip) || (null !== $take)) {
+                $this->groupSettings['skip'] = (null !== $skip) ? Utils::stringToNumber($skip) : 0;
+                $this->groupSettings['take'] = (null !== $take) ? Utils::stringToNumber($take) : 0;
             }
         }
     }
 
     public function group(mixed $expression, ?array $groupSummary = null, ?int $skip = null, ?int $take = null): self
     {
-        Utils::escapeExpressionValues($this->pdo, $expression);
-        Utils::escapeExpressionValues($this->pdo, $groupSummary);
+        Utils::escapeExpressionValues($expression);
+        Utils::escapeExpressionValues($groupSummary);
 
         $this->groupSettings = null;
 
-        if ($expression != null) {
+        if (null !== $expression) {
             $groupFields = '';
             $sortFields = '';
             $selectFields = '';
@@ -274,10 +279,9 @@ final class DbSet
                         '%s, %s(1)%s',
                         strlen($selectFields) ? $selectFields : $groupFields,
                         AggregateHelper::COUNT_OP,
-                        (isset($groupSummaryData) && isset($groupSummaryData['fields']) && strlen(
+                        ((null !== $groupSummaryData) && isset($groupSummaryData['fields']) && strlen(
                             $groupSummaryData['fields']
-                        ) ?
-                            ', ' . $groupSummaryData['fields'] : '')
+                        ) ? ', ' . $groupSummaryData['fields'] : '')
                     );
 
                     $groupCount++;
@@ -321,82 +325,80 @@ final class DbSet
      */
     public function getTotalSummary(mixed $expression, string|array|null $filterExpression = null): ?array
     {
-        Utils::escapeExpressionValues($this->pdo, $expression);
-        Utils::escapeExpressionValues($this->pdo, $filterExpression);
+        Utils::escapeExpressionValues($expression);
+        Utils::escapeExpressionValues($filterExpression);
 
-        $result = null;
+        if (!is_array($expression)) {
+            return null;
+        }
 
-        if (is_array($expression)) {
-            $summaryInfo = AggregateHelper::getSummaryInfo($expression);
-            $fields = $summaryInfo['fields'];
+        $summaryInfo = AggregateHelper::getSummaryInfo($expression);
+        $fields = $summaryInfo['fields'];
 
-            if (strlen($fields) > 0) {
-                $filter = '';
+        if (strlen($fields) == 0) {
+            return null;
+        }
 
-                if (is_string($filterExpression)) {
-                    $filter = trim($filterExpression);
-                }
+        $filter = '';
 
-                if (is_array($filterExpression)) {
-                    $filter = FilterHelper::getSqlExprByArray($filterExpression);
-                }
+        if (is_string($filterExpression)) {
+            $filter = trim($filterExpression);
+        }
 
-                $totalSummaryQuery = sprintf(
-                    '%s %s %s %s %s',
-                    self::SELECT_OP,
-                    $fields,
-                    self::FROM_OP,
-                    $this->dbTableName,
-                    strlen($filter) > 0 ? self::WHERE_OP . ' ' . $filter : $filter
-                );
+        if (is_array($filterExpression)) {
+            $filter = FilterHelper::getSqlExprByArray($filterExpression);
+        }
 
-                $this->lastError = null;
-                $queryResult = $this->pdo->query($totalSummaryQuery);
+        $totalSummaryQuery = sprintf(
+            '%s %s %s %s %s',
+            self::SELECT_OP,
+            $fields,
+            self::FROM_OP,
+            $this->dbTableName,
+            strlen($filter) > 0 ? self::WHERE_OP . ' ' . $filter : $filter
+        );
 
-                if (!$queryResult) {
-                    $this->lastError = $this->pdo->errorInfo();
-                } else {
-                    if ($queryResult->rowCount() > 0) {
-                        $result = $queryResult->fetch(PDO::FETCH_NUM);
+        $this->lastError = null;
+        $queryResult = $this->pdo->query($totalSummaryQuery);
 
-                        foreach ($result as $i => $item) {
-                            $result[$i] = Utils::stringToNumber($item);
-                        }
-                    }
-                }
+        if (!$queryResult) {
+            $this->lastError = $this->pdo->errorInfo();
+            return null;
+        }
 
-                if ($queryResult !== false) {
-                    $queryResult->closeCursor();
-                }
+        if ($queryResult->rowCount() > 0) {
+            $result = $queryResult->fetch(PDO::FETCH_NUM);
+
+            foreach ($result as $i => $item) {
+                $result[$i] = Utils::stringToNumber($item);
             }
         }
+
+        $queryResult->closeCursor();
 
         return $result;
     }
 
-    public function getGroupCount(): int
+    private function _getCount(string $queryString): int
     {
-        $result = 0;
+        $this->lastError = null;
+        $queryResult = $this->pdo->query($queryString);
 
-        if (isset($this->groupSettings) && isset($this->groupSettings['groupItemCountQuery'])) {
-            $this->lastError = null;
-            $queryResult = $this->pdo->query($this->groupSettings['groupItemCountQuery']);
-
-            if (!$queryResult) {
-                $this->lastError = $this->pdo->errorInfo();
-            } else {
-                if ($queryResult->rowCount() > 0) {
-                    $row = $queryResult->fetch(PDO::FETCH_NUM);
-                    $result = Utils::stringToNumber($row[0]);
-                }
-            }
-
-            if ($queryResult !== false) {
-                $queryResult->closeCursor();
-            }
+        if (!$queryResult) {
+            $this->lastError = $this->pdo->errorInfo();
+            return 0;
         }
 
-        return $result;
+        try {
+            $row = $queryResult->fetch(PDO::FETCH_NUM);
+            if (false === $row) {
+                return 0;
+            }
+
+            return Utils::stringToNumber($row[0]);
+        } finally {
+            $queryResult->closeCursor();
+        }
     }
 
     public function getCount(): int
@@ -414,52 +416,57 @@ final class DbSet
             $this->tableNameIndex + 1
         );
 
-        $this->lastError = null;
-        $queryResult = $this->pdo->query($countQuery);
+        return $this->_getCount($countQuery);
+    }
 
-        if (!$queryResult) {
-            $this->lastError = $this->pdo->errorInfo();
-        } else {
-            if ($queryResult->rowCount() > 0) {
-                $row = $queryResult->fetch(PDO::FETCH_NUM);
-                $result = Utils::stringToNumber($row[0]);
-            }
+    public function getGroupCount(): int
+    {
+        if ((null === $this->groupSettings) || !isset($this->groupSettings['groupItemCountQuery'])) {
+            return 0;
         }
 
-        if ($queryResult !== false) {
-            $queryResult->closeCursor();
-        }
-
-        return $result;
+        return $this->_getCount($this->groupSettings['groupItemCountQuery']);
     }
 
     public function asArray(): ?array
     {
-        $result = null;
-
         $this->lastError = null;
+
         $queryResult = $this->pdo->query($this->resultQuery);
 
         if (!$queryResult) {
             $this->lastError = $this->pdo->errorInfo();
-        } else {
-            if (isset($this->groupSettings)) {
-                $result = AggregateHelper::getGroupedDataFromQuery($queryResult, $this->groupSettings);
-            } else {
-                $result = $queryResult->fetchAll(PDO::FETCH_ASSOC);
-            }
-
-            $queryResult->closeCursor();
+            return null;
         }
 
-        return $result;
+        try {
+            if (null !== $this->groupSettings) {
+                return AggregateHelper::getGroupedDataFromQuery($queryResult, $this->groupSettings);
+            } else {
+                return $queryResult->fetchAll(PDO::FETCH_ASSOC);
+            }
+        } finally {
+            $queryResult->closeCursor();
+        }
+    }
+
+    public function _manipulate(string $queryString): ?int
+    {
+        $this->lastError = null;
+        $queryResult = $this->pdo->query($queryString);
+
+        if (!$queryResult) {
+            $this->lastError = $this->pdo->errorInfo();
+            return null;
+        } else {
+            return $queryResult->rowCount();
+        }
     }
 
     public function insert(array $values): ?int
     {
-        Utils::escapeExpressionValues($this->pdo, $values);
+        Utils::escapeExpressionValues($values);
 
-        $result = null;
         $fields = '';
         $fieldValues = '';
 
@@ -468,75 +475,58 @@ final class DbSet
             $fieldValues .= (strlen($fieldValues) ? ', ' : '') . Utils::quoteStringValue($value, false);
         }
 
-        if (strlen($fields) > 0) {
-            $queryString = sprintf(
-                '%s %s (%s) %s(%s)',
-                self::INSERT_OP,
-                $this->dbTableName,
-                $fields,
-                self::VALUES_OP,
-                $fieldValues
-            );
-            $this->lastError = null;
-
-            $queryResult = $this->pdo->query($queryString);
-
-            if (!$queryResult) {
-                $this->lastError = $this->pdo->errorInfo();
-            } else {
-                $result = $queryResult->rowCount();
-            }
+        if (strlen($fields) == 0) {
+            return null;
         }
 
-        return $result;
+        $queryString = sprintf(
+            '%s %s (%s) %s(%s)',
+            self::INSERT_OP,
+            $this->dbTableName,
+            $fields,
+            self::VALUES_OP,
+            $fieldValues
+        );
+
+        return $this->_manipulate($queryString);
     }
 
     public function update(array $key, array $values): ?int
     {
-        Utils::escapeExpressionValues($this->pdo, $key);
-        Utils::escapeExpressionValues($this->pdo, $values);
+        Utils::escapeExpressionValues($key);
+        Utils::escapeExpressionValues($values);
 
-        $result = null;
         $fields = '';
 
         foreach ($values as $prop => $value) {
-            $templ = strlen($fields) == 0 ? '%s = %s' : ', %s = %s';
+            $template = strlen($fields) == 0 ? '%s = %s' : ', %s = %s';
             $fields .= sprintf(
-                $templ,
+                $template,
                 Utils::quoteStringValue($prop),
                 Utils::quoteStringValue($value, false)
             );
         }
 
-        if (strlen($fields) > 0) {
-            $queryString = sprintf(
-                '%s %s %s %s %s %s',
-                self::UPDATE_OP,
-                $this->dbTableName,
-                self::SET_OP,
-                $fields,
-                self::WHERE_OP,
-                FilterHelper::getSqlExprByKey($key)
-            );
-            $this->lastError = null;
-
-            $queryResult = $this->pdo->query($queryString);
-
-            if (!$queryResult) {
-                $this->lastError = $this->pdo->errorInfo();
-            } else {
-                $result = $queryResult->rowCount();
-            }
+        if (0 == strlen($fields)) {
+            return null;
         }
 
-        return $result;
+        $queryString = sprintf(
+            '%s %s %s %s %s %s',
+            self::UPDATE_OP,
+            $this->dbTableName,
+            self::SET_OP,
+            $fields,
+            self::WHERE_OP,
+            FilterHelper::getSqlExprByKey($key)
+        );
+
+        return $this->_manipulate($queryString);
     }
 
     public function delete(array $key): ?int
     {
-        Utils::escapeExpressionValues($this->pdo, $key);
-
-        $result = null;
+        Utils::escapeExpressionValues($key);
 
         $queryString = sprintf(
             '%s %s %s %s %s',
@@ -546,16 +536,7 @@ final class DbSet
             self::WHERE_OP,
             FilterHelper::getSqlExprByKey($key)
         );
-        $this->lastError = null;
 
-        $queryResult = $this->pdo->query($queryString);
-
-        if (!$queryResult) {
-            $this->lastError = $this->pdo->errorInfo();
-        } else {
-            $result = $queryResult->rowCount();
-        }
-
-        return $result;
+        return $this->_manipulate($queryString);
     }
 }

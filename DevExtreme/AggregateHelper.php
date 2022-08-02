@@ -29,7 +29,7 @@ final class AggregateHelper
             }
         }
 
-        if (isset($groupInfo['summaryTypes']) && $groupInfo['groupIndex'] < $groupInfo['groupCount'] - 2) {
+        if (isset($groupInfo['summaryTypes']) && ($groupInfo['groupIndex'] < $groupInfo['groupCount'] - 2)) {
             $result = [];
             $items = $dataItem['items'];
             $itemsCount = count($items);
@@ -122,7 +122,7 @@ final class AggregateHelper
     {
         $itemsCount = count($resultItems);
 
-        if ($row == null && !$itemsCount) {
+        if ((null === $row) && !$itemsCount) {
             return;
         }
 
@@ -133,14 +133,14 @@ final class AggregateHelper
             $currentItem = &$resultItems[$itemsCount - 1];
 
             if (!$groupInfo['lastGroupExpanded']) {
-                if ($row == null || $currentItem['key'] != $row[$groupInfo['groupIndex']]) {
+                if ((null === $row) || ($currentItem['key'] != $row[$groupInfo['groupIndex']])) {
                     if ($groupInfo['groupIndex'] == 0 && $groupInfo['groupCount'] > 2) {
                         self::_recalculateGroupCountAndSummary($currentItem, $groupInfo);
                     }
 
                     unset($currentItem);
 
-                    if (!isset($row)) {
+                    if (null === $row) {
                         return;
                     }
                 }
@@ -210,7 +210,7 @@ final class AggregateHelper
         ];
 
         while ($row = $queryResult->fetch(PDO::FETCH_NUM)) {
-            if ($startSummaryFieldIndex != null) {
+            if (null !== $startSummaryFieldIndex) {
                 for ($i = $startSummaryFieldIndex; $i <= $endSummaryFieldIndex; $i++) {
                     $row[$i] = Utils::stringToNumber($row[$i]);
                 }
@@ -222,8 +222,8 @@ final class AggregateHelper
         if (!$groupSettings['lastGroupExpanded']) {
             self::_groupData(null, $result, $groupInfo);
         } else {
-            if (isset($groupSettings['skip']) && $groupSettings['skip'] >= 0 &&
-                isset($groupSettings['take']) && $groupSettings['take'] >= 0) {
+            if (isset($groupSettings['skip']) && ($groupSettings['skip'] >= 0) &&
+                isset($groupSettings['take']) && ($groupSettings['take'] >= 0)) {
                 $result = array_slice($result, $groupSettings['skip'], $groupSettings['take']);
             }
         }
@@ -233,18 +233,17 @@ final class AggregateHelper
 
     public static function isLastGroupExpanded(array $items): bool
     {
-        $result = true;
         $itemsCount = count($items);
-
-        if ($itemsCount > 0) {
-            $lastItem = $items[$itemsCount - 1];
-
-            if (gettype($lastItem) === 'object') {
-                $result = !isset($lastItem->isExpanded) || $lastItem->isExpanded === true;
-            }
+        if ($itemsCount == 0) {
+            return true;
         }
 
-        return $result;
+        $lastItem = $items[$itemsCount - 1];
+        if (gettype($lastItem) == 'object') {
+            return !isset($lastItem->isExpanded) || (true === $lastItem->isExpanded);
+        }
+
+        return true;
     }
 
     public static function getFieldSetBySelectors(array $items): array
@@ -262,7 +261,7 @@ final class AggregateHelper
             if (is_string($item) && strlen($item = trim($item))) {
                 $selectField = $groupField = $sortField = Utils::quoteStringValue($item);
             } else {
-                if (gettype($item) === 'object' && isset($item->selector)) {
+                if (gettype($item) == 'object' && isset($item->selector)) {
                     $quoteSelector = Utils::quoteStringValue($item->selector);
                     $desc = $item->desc ?? false;
 
@@ -298,15 +297,15 @@ final class AggregateHelper
                 }
             }
 
-            if (isset($selectField)) {
+            if (null !== $selectField) {
                 $select .= (strlen($select) > 0 ? ', ' . $selectField : $selectField);
             }
 
-            if (isset($groupField)) {
+            if (null !== $groupField) {
                 $group .= (strlen($group) > 0 ? ', ' . $groupField : $groupField);
             }
 
-            if (isset($sortField)) {
+            if (null !== $sortField) {
                 $sort .= (strlen($sort) > 0 ? ', ' . $sortField : $sortField) .
                     ($desc ? ' DESC' : '');
             }
@@ -331,7 +330,7 @@ final class AggregateHelper
         $summaryTypes = [];
 
         foreach ($expression as $index => $item) {
-            if (gettype($item) === 'object' && isset($item->summaryType)) {
+            if (gettype($item) == 'object' && isset($item->summaryType)) {
                 $summaryType = strtoupper(trim($item->summaryType));
 
                 if (!self::_isSummaryTypeValid($summaryType)) {

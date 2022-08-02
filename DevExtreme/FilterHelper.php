@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DevExtreme;
 
 use Exception;
@@ -40,7 +42,7 @@ final class FilterHelper
                 break;
 
             default:
-                throw new Exception("The \"" . $dateProperty . "\" command is not supported");
+                throw new Exception('The "' . $dateProperty . '" command is not supported');
         }
 
         return sprintf($fieldPattern, $sqlDateFunction, $fieldName);
@@ -65,7 +67,7 @@ final class FilterHelper
             $val = $expression[2];
             $pattern = '';
 
-            if (is_null($val)) {
+            if (null === $val) {
                 $val = Utils::quoteStringValue($val, false);
                 $pattern = '%s %s %s';
 
@@ -177,12 +179,12 @@ final class FilterHelper
         $result = '';
 
         foreach ($key as $prop => $value) {
-            $templ = strlen($result) == 0 ?
+            $template = strlen($result) == 0 ?
                 '%s = %s' :
                 ' ' . self::AND_OP . ' %s = %s';
 
             $result .= sprintf(
-                $templ,
+                $template,
                 Utils::quoteStringValue($prop),
                 Utils::quoteStringValue($value, false)
             );

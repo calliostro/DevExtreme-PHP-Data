@@ -342,7 +342,7 @@ final class DbSetAPITest extends TestBase
         ];
         $this->dbSet->filter($filterExpression);
         $data = $this->dbSet->asArray();
-        $this->assertTrue($data !== null && count($data) == 1 && $data[0]['ID'] == 30);
+        $this->assertTrue((null !== $data) && (count($data) == 1) && 30 == $data[0]['ID']);
     }
 
     /**

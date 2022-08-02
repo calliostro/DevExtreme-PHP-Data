@@ -23,7 +23,7 @@ final class DataSourceLoader
             return null;
         }
 
-        $totalCount = (isset($params['requireTotalCount']) && $params['requireTotalCount'] === true)
+        $totalCount = (isset($params['requireTotalCount']) && (true === $params['requireTotalCount']))
             ? $dbSet->getCount() : null;
 
         if ($dbSet->getLastError() !== null) {
@@ -40,7 +40,7 @@ final class DataSourceLoader
             $groupSummary = Utils::getItemValueOrDefault($params, 'groupSummary');
             $dbSet->group($groupExpression, $groupSummary, $skip, $take);
 
-            if (isset($params['requireGroupCount']) && $params['requireGroupCount'] === true) {
+            if (isset($params['requireGroupCount']) && (true === $params['requireGroupCount'])) {
                 $groupCount = $dbSet->getGroupCount();
             }
         } else {

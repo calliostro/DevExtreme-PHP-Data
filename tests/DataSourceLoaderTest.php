@@ -363,7 +363,7 @@ final class DataSourceLoaderTest extends TestBase
 
         for ($i = 0; $i < $dataItemsCount; $i++) {
             $compareResult = strcmp($currentValue, strval($result[$i][$field]));
-            $count = isset($groupExpression[0]->isExpanded) && $groupExpression[0]->isExpanded === false ? $result[$i]['count'] : count(
+            $count = isset($groupExpression[0]->isExpanded) && ($groupExpression[0]->isExpanded === false) ? $result[$i]['count'] : count(
                 $result[$i]['items']
             );
 
@@ -404,7 +404,7 @@ final class DataSourceLoaderTest extends TestBase
             $groupCount = $data['groupCount'];
         }
 
-        $this->assertTrue($isPaginated && $groupCount === 4);
+        $this->assertTrue($isPaginated && (4 === $groupCount));
     }
 
     /**

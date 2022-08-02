@@ -4,25 +4,23 @@ declare(strict_types=1);
 
 namespace DevExtreme;
 
-use PDO;
-
 final class Utils
 {
     private const NULL_VAL = 'NULL';
     private const FORBIDDEN_CHARACTERS = [
         '`',
-        "\"",
+        '"',
         "'",
         '~',
         '!',
         '@',
         '#',
-        "\$",
+        '$',
         '%',
         '=',
         '[',
         ']',
-        "\\",
+        '\\',
         '/',
         '|',
         '^',
@@ -51,22 +49,22 @@ final class Utils
         return !str_contains((string)$str, $decimalPoint) ? intval($str) : floatval($str);
     }
 
-    public static function escapeExpressionValues(PDO $pdo, mixed &$expression = null): void
+    public static function escapeExpressionValues(mixed &$expression = null): void
     {
-        if ($expression != null) {
+        if (null !== $expression) {
             if (is_string($expression)) {
                 $expression = self::_pdo_escape_string($expression);
             } else {
                 if (is_array($expression)) {
                     foreach ($expression as &$arr_value) {
-                        self::escapeExpressionValues($pdo, $arr_value);
+                            self::escapeExpressionValues($arr_value);
                     }
 
                     unset($arr_value);
                 } else {
-                    if (gettype($expression) === 'object') {
+                    if (gettype($expression) == 'object') {
                         foreach ($expression as $prop => $value) {
-                            self::escapeExpressionValues($pdo, $expression->$prop);
+                            self::escapeExpressionValues($expression->$prop);
                         }
                     }
                 }
@@ -84,8 +82,8 @@ final class Utils
             }
         }
 
-        $resultPattern = $isFieldName ? '`%s`' : (is_bool($value) || is_null($value) ? '%s' : "'%s'");
-        $stringValue = is_bool($value) ? ($value ? '1' : '0') : (is_null($value) ? self::NULL_VAL : strval($value));
+        $resultPattern = $isFieldName ? '`%s`' : (is_bool($value) || (null === $value) ? '%s' : "'%s'");
+        $stringValue = is_bool($value) ? ($value ? '1' : '0') : ((null === $value) ? self::NULL_VAL : strval($value));
 
         return sprintf($resultPattern, $stringValue);
     }
@@ -106,8 +104,6 @@ final class Utils
             chr(8) => "\\b",
             '"' => '\"',
             "'" => "\'",
-//            '_' => '\_',
-//            '%' => '\%',
             '\\' => '\\\\'
         ];
 
@@ -123,19 +119,17 @@ final class Utils
 
     private static function _convertDateTimeToPdoValue(string $strValue): string
     {
-        $result = $strValue;
-
         if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $strValue) === 1) {
-            $result = self::_convertDatePartToISOValue($strValue);
-        } else {
-            if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4} \d{2}:\d{2}:\d{2}\.\d{3}$/', $strValue) === 1) {
-                $spacePos = strpos($strValue, ' ');
-                $datePart = substr($strValue, 0, $spacePos);
-                $timePart = substr($strValue, $spacePos + 1);
-                $result = sprintf('%s %s', self::_convertDatePartToISOValue($datePart), $timePart);
-            }
+           return self::_convertDatePartToISOValue($strValue);
         }
 
-        return $result;
+        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4} \d{2}:\d{2}:\d{2}\.\d{3}$/', $strValue) === 1) {
+            $spacePos = strpos($strValue, ' ');
+            $datePart = substr($strValue, 0, $spacePos);
+            $timePart = substr($strValue, $spacePos + 1);
+            return sprintf('%s %s', self::_convertDatePartToISOValue($datePart), $timePart);
+        }
+
+        return $strValue;
     }
 }

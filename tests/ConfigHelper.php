@@ -10,7 +10,7 @@ final class ConfigHelper
     {
         $configFileName = getenv('TEST_CONF');
 
-        if ($configFileName === false) {
+        if (false === $configFileName) {
             $configFileName = 'config.json';
         }
 

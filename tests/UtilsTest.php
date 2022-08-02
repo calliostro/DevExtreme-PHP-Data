@@ -47,7 +47,7 @@ class UtilsTest extends TestBase
     public function testEscapeExpressionValues()
     {
         $result = "tes't";
-        Utils::escapeExpressionValues(UtilsTest::$pdo, $result);
+        Utils::escapeExpressionValues($result);
 
         $this->assertEquals("tes\'t", $result);
     }
