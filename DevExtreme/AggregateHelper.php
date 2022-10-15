@@ -9,13 +9,13 @@ use PDOStatement;
 
 final class AggregateHelper
 {
-    const MIN_OP = 'MIN';
-    const MAX_OP = 'MAX';
-    const AVG_OP = 'AVG';
-    const COUNT_OP = 'COUNT';
-    const SUM_OP = 'SUM';
-    const AS_OP = 'AS';
-    const GENERATED_FIELD_PREFIX = 'dx_';
+    private const MIN_OP = 'MIN';
+    private const MAX_OP = 'MAX';
+    private const AVG_OP = 'AVG';
+    public const COUNT_OP = 'COUNT';
+    private const SUM_OP = 'SUM';
+    public const AS_OP = 'AS';
+    private const GENERATED_FIELD_PREFIX = 'dx_';
 
     private static function _recalculateGroupCountAndSummary(array &$dataItem, array $groupInfo): void
     {

@@ -366,15 +366,23 @@ final class DbSet
             return null;
         }
 
-        if ($queryResult->rowCount() > 0) {
-            $result = $queryResult->fetch(PDO::FETCH_NUM);
+        $result = null;
 
-            foreach ($result as $i => $item) {
-                $result[$i] = Utils::stringToNumber($item);
+        try {
+            if ($queryResult->rowCount() > 0) {
+                $result = $queryResult->fetch(PDO::FETCH_NUM);
+                if (false === $result) {
+                    $this->lastError = $queryResult->errorInfo();
+                    return null;
+                }
+
+                foreach ($result as $i => $item) {
+                    $result[$i] = Utils::stringToNumber($item);
+                }
             }
+        } finally {
+            $queryResult->closeCursor();
         }
-
-        $queryResult->closeCursor();
 
         return $result;
     }
@@ -392,6 +400,7 @@ final class DbSet
         try {
             $row = $queryResult->fetch(PDO::FETCH_NUM);
             if (false === $row) {
+                $this->lastError = $queryResult->errorInfo();
                 return 0;
             }
 
@@ -403,8 +412,6 @@ final class DbSet
 
     public function getCount(): int
     {
-        $result = 0;
-
         $countQuery = sprintf(
             '%s %s(1) %s (%s) %s %s_%d',
             self::SELECT_OP,
@@ -443,7 +450,13 @@ final class DbSet
             if (null !== $this->groupSettings) {
                 return AggregateHelper::getGroupedDataFromQuery($queryResult, $this->groupSettings);
             } else {
-                return $queryResult->fetchAll(PDO::FETCH_ASSOC);
+                $result = $queryResult->fetchAll(PDO::FETCH_ASSOC);
+                if (false === $result) {
+                    $this->lastError = $queryResult->errorInfo();
+                    return null;
+                }
+
+                return $result;
             }
         } finally {
             $queryResult->closeCursor();

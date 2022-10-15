@@ -54,19 +54,15 @@ final class Utils
         if (null !== $expression) {
             if (is_string($expression)) {
                 $expression = self::_pdo_escape_string($expression);
-            } else {
-                if (is_array($expression)) {
-                    foreach ($expression as &$arr_value) {
-                            self::escapeExpressionValues($arr_value);
-                    }
+            } elseif (is_array($expression)) {
+                foreach ($expression as &$arr_value) {
+                    self::escapeExpressionValues($arr_value);
+                }
 
-                    unset($arr_value);
-                } else {
-                    if (gettype($expression) == 'object') {
-                        foreach ($expression as $prop => $value) {
-                            self::escapeExpressionValues($expression->$prop);
-                        }
-                    }
+                unset($arr_value);
+            } elseif (gettype($expression) == 'object') {
+                foreach ($expression as $prop => $value) {
+                    self::escapeExpressionValues($expression->{$prop});
                 }
             }
         }
@@ -120,7 +116,7 @@ final class Utils
     private static function _convertDateTimeToPdoValue(string $strValue): string
     {
         if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $strValue) === 1) {
-           return self::_convertDatePartToISOValue($strValue);
+            return self::_convertDatePartToISOValue($strValue);
         }
 
         if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4} \d{2}:\d{2}:\d{2}\.\d{3}$/', $strValue) === 1) {
